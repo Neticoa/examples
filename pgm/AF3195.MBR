@@ -1,0 +1,23 @@
+     H*---------------------------------------------------------------*                             
+     H*                                                                                             
+     H DFTNAME(AF3195) DATEDIT(*DMY)                                                                
+     F*                                                                                             
+      *- Fichier des Bons à payer.                                                                  
+     F*                                                                                             
+     FOPEBA     UPE  F  326        DISK                                                             
+     F*                                                                                             
+     FOPEB1     O  A F  326        DISK                                                             
+     I*                                                                                             
+     IOPEBA     NS  01                                                                              
+     I*                                                                                             
+     I                                136  136 0COECGE                                              
+     I                                  1  256  TOU1                                                
+     I                                257  326  TOU2                                                
+      *                                                                                             
+     C     COECGE        COMP      1                                      10                        
+      *                                                                                             
+     OOPEB1     DADD 01 10                                                                          
+     O                       TOU1               256                                                 
+     O                       TOU2               326                                                 
+      *                                                                                             
+     OOPEBA     DDEL 01 10                                                                          

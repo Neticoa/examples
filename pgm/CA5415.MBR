@@ -1,0 +1,377 @@
+      *=========================================================================                    
+      *                                                                                             
+      *   Edition balance analytique.                                                               
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  Détail des indicateurs utilisés.                                                           
+      *                                                                                             
+      *    *IN01 _  Aide.                                                                           
+      *    *IN02 _  Touche de fonction incorrecte.                                                  
+      *    *IN03 _  Exit.                                                                           
+      *    *IN04 _  Invite.                                                                         
+      *    *IN05 _  Réafficher.                                                                     
+      *    *IN12 _  Annuler.                                                                        
+      *    *IN21 _  QUSCMDLN.                                                                       
+      *    *IN22 _  DSPOBJD.                                                                        
+      *    *IN28 _  ROLLUP.                                                                         
+      *    *IN28 _  ROLLDOWN.                                                                       
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  Constitution des variables:                                                                
+      *                                                                                             
+      *     VAR   _  Variable fichier.                                                              
+      *    àVAR   _  Variable paramètre.                                                            
+      *    $VAR   _  Variable écran.                                                                
+      *    £VAR   _  Variable programme.                                                            
+      *                                                                                             
+      *=========================================================================                    
+     H DATEDIT(*DMY)                                                                                
+      *                                                                                             
+      * Fichier plan comptable analytique.                                                          
+      *                                                                                             
+     FCPPLAA00  IPE  F  232        DISK                                                             
+      *                                                                                             
+      * Fichier Plan comptable.                                                                     
+      *                                                                                             
+     FCPPAR01   IF   F  128    12AIDISK    KEYLOC(1)                                                
+      *                                                                                             
+      * Fichier Etat.                                                                               
+      *                                                                                             
+     FCP5420P   O    F  198        PRINTER OFLIND(*INOF)                                            
+      *                                                                                             
+      *===================================================================                          
+     D DEB             S             13  2 DIM(12)                                                  
+     D CRE             S             13  2 DIM(12)                                                  
+     D TLI             S             66    DIM(8) CTDATA PERRCD(1)                                  
+     D TM              S              2  0 DIM(12) CTDATA PERRCD(12)                                
+      *                                                                                             
+      * Période.                                                                                    
+      *                                                                                             
+     D                 DS                                                                           
+     D  PEANNE                 1      4  0                                                          
+     D  PEMOIS                 5      6  0                                                          
+     D  PERIOD                 1      6  0                                                          
+      *                                                                                             
+     D                UDS                                                                           
+     D  ZCSOC                350    351  0                                                          
+     D  ZCLSOC               352    366                                                             
+      *===================================================================                          
+      *                                                                                             
+     ICPPLAA00  NS  01                                                                              
+     I                                  3    9 0CPT           L2                                    
+     I                                  3   13 0CPT1          L1                                    
+     I                                  3    3 0CLA           L3                                    
+     I                                 10   11 0SER                                                 
+     I                                 12   13 0PROD          L4                                    
+     I                                 14   14 0FRAIS                                               
+     I                                 18   47  LIB                                                 
+     I                             P   48  131  DEB                                                 
+     I                             P  132  215  CRE                                                 
+      *                                                                ===                          
+     ICPPAR01   NS  11                                                                              
+     I                                 19   48  PALIBT                                              
+      *                                                                                             
+      *===================================================================                          
+      * Rupture L4(Etablissements)                                                                  
+      *===================================================================                          
+      *                                                                                             
+     C     *INL4         IFEQ      *ON                                          -+                  
+      *                                                     !                                       
+     C                   MOVEL     àSOC          ZON5              5                                
+     C                   MOVE      '29L'         ZON5                                               
+     C                   MOVEL     ZON5          CLEDIC           12                                
+     C                   MOVEL     *BLANKS       ZON7              7                                
+     C                   MOVEL     PROD          ZON7                                               
+     C                   MOVE      ZON7          CLEDIC                                             
+     C     CLEDIC        CHAIN     CPPAR01                            21                            
+     C  N21              MOVEL     PALIBT        LIBFRA           30                                
+     C   21              MOVEL(P)  'INCONNU'     LIBFRA                                             
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      *===================================================================                          
+      * Rupture L1:                                                                                 
+      *===================================================================                          
+      *                                                                                             
+     C     *INL1         IFEQ      *ON                                          -+                  
+     C                   MOVEL     LIB           LIB1             19                                
+     C                   ENDIF                                                  -+                  
+     C                   Z-ADD     0             DEBAN1                                             
+     C                   Z-ADD     0             CREAN1                                             
+     C                   Z-ADD     DEB(PEMOIS)   DEBME1           11 2                              
+     C                   Z-ADD     CRE(PEMOIS)   CREME1           11 2                              
+     C                   Z-ADD     £MDEB         I                 2 0                              
+     C     BOUCLE        TAG                                                                        
+     C                   ADD       DEB(PEMOIS)   DEBAN1           12 2                              
+     C                   ADD       CRE(PEMOIS)   CREAN1           12 2                              
+     C     I             COMP      PEMOIS                                 15                        
+     C  N15I             COMP      12                                     12                        
+     C  N15                                                                                         
+     CAN 12              Z-ADD     1             I                                                  
+     C  N15                                                                                         
+     CANN12I             ADD       1             I                                                  
+     C  N15              GOTO      BOUCLE                                                           
+     C                   ADD       DEBME1        DEBMEN           11 2                              
+     C                   ADD       CREME1        CREMEN           11 2                              
+     C                   ADD       DEBAN1        DEBANN           12 2                              
+     C                   ADD       CREAN1        CREANN           12 2                              
+      *                                                                                             
+     C     FIN           TAG                                                                        
+      *                                                                                             
+     CL1   DEBANN        SUB       CREANN        SOLDE            12 2                              
+     CL1   DEBMEN        SUB       CREMEN        SOLMEN           11 2                              
+     CL1   DEBMEN        ADD       DML2          DML2             11 2                              
+     CL1   CREMEN        ADD       CML2          CML2             11 2                              
+     CL1   SOLMEN        ADD       SML2          SML2             11 2                              
+     CL1   DEBANN        ADD       DAL2          DAL2             12 2                              
+     CL1   CREANN        ADD       CAL2          CAL2             12 2                              
+     CL1   SOLDE         ADD       SDL2          SDL2             12 2                              
+     CL1   DEBMEN        ADD       DML3          DML3             11 2                              
+     CL1   CREMEN        ADD       CML3          CML3             11 2                              
+     CL1   SOLMEN        ADD       SML3          SML3             11 2                              
+     CL1   DEBANN        ADD       DAL3          DAL3             12 2                              
+     CL1   CREANN        ADD       CAL3          CAL3             12 2                              
+     CL1   SOLDE         ADD       SDL3          SDL3             12 2                              
+     CL1   DEBMEN        ADD       DML4          DML4             11 2                              
+     CL1   CREMEN        ADD       CML4          CML4             11 2                              
+     CL1   SOLMEN        ADD       SML4          SML4             11 2                              
+     CL1   DEBANN        ADD       DAL4          DAL4             12 2                              
+     CL1   CREANN        ADD       CAL4          CAL4             12 2                              
+     CL1   SOLDE         ADD       SDL4          SDL4             12 2                              
+     CL1   DEBMEN        ADD       DMLR          DMLR             11 2                              
+     CL1   CREMEN        ADD       CMLR          CMLR             11 2                              
+     CL1   SOLMEN        ADD       SMLR          SMLR             11 2                              
+     CL1   DEBANN        ADD       DALR          DALR             12 2                              
+     CL1   CREANN        ADD       CALR          CALR             12 2                              
+     CL1   SOLDE         ADD       SDLR          SDLR             12 2                              
+      *                                                                                             
+      *===================================================================                          
+      * *INZSR: initialisation.                                                                     
+      *===================================================================                          
+      *                                                                                             
+     C     *INZSR        BEGSR                                                                      
+      *                                                                                             
+      * Réception paramètres.                                                                       
+      *                                                                                             
+     C     *ENTRY        PLIST                                                                      
+     C                   PARM                    àSOC              2                                
+     C                   PARM                    àDTDE             6                                
+     C                   PARM                    àMOUV             1                                
+     C                   PARM                    àOPT              1                                
+     C                   PARM                    àMDEB             2                                
+      *                                                                                             
+      * Initialisation variables.                                                                   
+      *                                                                                             
+     C                   TIME                    W1TIME            6 0                              
+     C                   MOVEL     *DATE         £UDATE            8 0                              
+      *                                                                                             
+     C                   MOVEL     àMDEB         £MDEB             2 0                              
+      *                                                                                             
+      * Période.                                                                                    
+      *                                                                                             
+     C                   MOVEL     àDTDE         PERIOD                                             
+      *                                                                                             
+     C                   MOVEL     PEMOIS        WZN060            6 0                              
+     C                   MOVE      PEANNE        WZN060                                             
+     C                   MOVE      WZN060        W1DCPT            8 0                              
+      *                                                                                             
+      * Année bissextile.                                                                           
+      *                                                                                             
+     C     PEANNE        DIV       4             WZN002            4 0                              
+     C                   MVR                     WZN002                                             
+      *                                                                                             
+     C     WZN002        IFEQ      0                                            -+                  
+     C                   Z-ADD     29            TM(2)                           !                  
+     C                   ELSE                                                    *                  
+     C                   Z-ADD     28            TM(2)                           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C                   MOVEL     TM(PEMOIS)    W1DCPT                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *===================================================================                          
+     OCP5420P   D       L4                    01                                                    
+     O         OR       OFNL4                                                                       
+     O                                           77 '*** BALANCE ANALYTIQUE *'                      
+     O                                           79 '**'                                            
+     O                                          121 'Date :'                                        
+     O                       £UDATE             132 '  /  /    '                                    
+     O                       àSOC                 3                                                 
+     O                       ZCLSOC              20                                                 
+     O          D    L4                     1                                                       
+     O         OR    OFNL4                                                                          
+     O                                           77 '*** BALANCE ANALYTIQUE *'                      
+     O                                           79 '**'                                            
+     O          D    L4                     0                                                       
+     O         OR    OFNL4                                                                          
+     O                                            8 'CA5415  '                                      
+     O                     U6                    27 'S I M U L A T I O N '                          
+     O                                           68 'Arrêté au :'                                   
+     O                       W1DCPT              79 '  /  /    '                                    
+     O                                          121 'Page :'                                        
+     O                       PAGE          Z    132                                                 
+     O          D    L4                     1                                                       
+     O         OR    OFNL4                                                                          
+     O                       W1DCPT              79 '  /  /    '                                    
+     O          D    L4                  1  1                                                       
+     O         OR    OFNL4                                                                          
+     O                                           24 '+----------------------+'                      
+     O          D    L4                     0                                                       
+     O         OR    OFNL4                                                                          
+     O                                           24 '! Type de produits     !'                      
+     O                       PROD                21                                                 
+     O                       LIBFRA              54                                                 
+     O          D    L4                     1                                                       
+     O         OR    OFNL4                                                                          
+     O                       PROD                21                                                 
+     O          D    L4                     1                                                       
+     O         OR    OFNL4                                                                          
+     O                                           24 '+----------------------+'                      
+     O          D    L4                  1  0                                                       
+     O         OR    OFNL4                                                                          
+     O                                           65 'M   O   I   S'                                 
+     O                                          109 'C   U   M   U   L'                             
+     O          D    L4                     1                                                       
+     O         OR    OFNL4                                                                          
+     O                                           65 'M   O   I   S'                                 
+     O                                          109 'C   U   M   U   L'                             
+     O          D    L4                  1  1                                                       
+     O         OR    OFNL4                                                                          
+     O                       TLI(1)              66                                                 
+     O                       TLI(2)             132                                                 
+     O          D    L4                     0                                                       
+     O         OR    OFNL4                                                                          
+     O                       TLI(3)              66                                                 
+     O                       TLI(4)             132                                                 
+     O          D    L4                     1                                                       
+     O         OR    OFNL4                                                                          
+     O                       TLI(3)              66                                                 
+     O                       TLI(4)             132                                                 
+     O          D    L4                     1                                                       
+     O         OR    OFNL4                                                                          
+     O                       TLI(5)              66                                                 
+     O                       TLI(6)             132                                                 
+     O          D    L4                     1                                                       
+     O         OR    OFNL4                                                                          
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    L1                     0                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    L1                     1                                                       
+     O                       CPT                  9                                                 
+     O                       SER                 12                                                 
+     O                       FRAIS               14                                                 
+     O                       LIB1                35                                                 
+     O                       DEBMEN        MB    50                                                 
+     O                       CREMEN        MB    65                                                 
+     O                       SOLMEN        MB    80                                                 
+     O                       DEBANN        MB    97                                                 
+     O                       CREANN        MB   113                                                 
+     O                       SOLDE         MB   129                                                 
+     O          T    L1 OFNL2               1                                                       
+     O                       TLI(5)              66                                                 
+     O                       TLI(6)             132                                                 
+     O          T    L2                     1                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    L2                     0                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O                       CPT                 34                                                 
+     O          T    L2                     1                                                       
+     O                                           27 '**  Total du Compte    '                       
+     O                       CPT                 34                                                 
+     O                       DML2          MB    50                                                 
+     O                       CML2          MB    65                                                 
+     O                       SML2          MB    80                                                 
+     O                       DAL2          MB    97                                                 
+     O                       CAL2          MB   113                                                 
+     O                       SDL2          MB   129                                                 
+     O          T    L2                     1                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    L2 OFNL3               1                                                       
+     O                       TLI(5)              66                                                 
+     O                       TLI(6)             132                                                 
+     O          T    L3                     1                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    L3                     0                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O                       CLA                 30                                                 
+     O          T    L3                     1                                                       
+     O                                           27 '**  Total Classe       '                       
+     O                       CLA                 30                                                 
+     O                       DML3          MB    50                                                 
+     O                       CML3          MB    65                                                 
+     O                       SML3          MB    80                                                 
+     O                       DAL3          MB    97                                                 
+     O                       CAL3          MB   113                                                 
+     O                       SDL3          MB   129                                                 
+     O          T    L3                     1                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    L3 OFNL4               1                                                       
+     O                       TLI(5)              66                                                 
+     O                       TLI(6)             132                                                 
+     O          T    L4                     1                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    L4                     0                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O                       PROD                30                                                 
+     O          T    L4                     1                                                       
+     O                                           27 '**  Total Type produits'                       
+     O                       PROD                30                                                 
+     O                       DML4          MB    50                                                 
+     O                       CML4          MB    65                                                 
+     O                       SML4          MB    80                                                 
+     O                       DAL4          MB    97                                                 
+     O                       CAL4          MB   113                                                 
+     O                       SDL4          MB   129                                                 
+     O          T    L4                     1                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    L4NLR                  1                                                       
+     O                       TLI(5)              66                                                 
+     O                       TLI(6)             132                                                 
+     O          T    LR                     0                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    LR                     0                                                       
+     O                                           21 '*** Total Général'                             
+     O                       DMLR          MB    50                                                 
+     O                       CMLR          MB    65                                                 
+     O                       SMLR          MB    80                                                 
+     O                       DALR          MB    97                                                 
+     O                       CALR          MB   113                                                 
+     O                       SDLR          MB   129                                                 
+     O          T    LR                     1                                                       
+     O                                           21 '*** Total Général'                             
+     O                       DMLR          MB    50                                                 
+     O                       CMLR          MB    65                                                 
+     O                       SMLR          MB    80                                                 
+     O                       DALR          MB    97                                                 
+     O                       CALR          MB   113                                                 
+     O                       SDLR          MB   129                                                 
+     O          T    LR                     1                                                       
+     O                       TLI(7)              66                                                 
+     O                       TLI(8)             132                                                 
+     O          T    LR                     1                                                       
+     O                       TLI(5)              66                                                 
+     O                       TLI(6)             132                                                 
+**   TLI                                                                       2                    
++----------------------------------+--------------+--------------+                                  
+--------------++---------------+---------------+-----------------+                                  
+!Compte Se/Fr Intitulé             !   Débit      !   Crédit     !                                  
+    Solde     !!    Débit      !      Crédit   !     Solde       !                                  
++----------------------------------+--------------+--------------+                                  
+--------------++---------------+---------------+-----------------+                                  
+!                                  !              !              !                                  
+              !!               !               !                 !                                  
+** TM                                                                                               
+312831303130313130313031                                             1                              

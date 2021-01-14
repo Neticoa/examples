@@ -1,0 +1,474 @@
+      *=========================================================================                    
+      *                                                                                             
+      *   Edition balance analytique.                                                               
+      *=========================================================================                    
+      *                                                                                             
+      *  Détail des indicateurs utilisés.                                                           
+      *                                                                                             
+      *    *IN01 _  Aide.                                                                           
+      *    *IN02 _  Touche de fonction incorrecte.                                                  
+      *    *IN03 _  Exit.                                                                           
+      *    *IN04 _  Invite.                                                                         
+      *    *IN05 _  Réafficher.                                                                     
+      *    *IN12 _  Annuler.                                                                        
+      *    *IN21 _  QUSCMDLN.                                                                       
+      *    *IN22 _  DSPOBJD.                                                                        
+      *    *IN28 _  ROLLUP.                                                                         
+      *    *IN28 _  ROLLDOWN.                                                                       
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  Constitution des variables:                                                                
+      *                                                                                             
+      *     VAR   _  Variable fichier.                                                              
+      *    àVAR   _  Variable paramètre.                                                            
+      *    $VAR   _  Variable écran.                                                                
+      *    £VAR   _  Variable programme.                                                            
+      *                                                                                             
+      *=========================================================================                    
+     H DATEDIT(*DMY)                                                                                
+      *                                                                                             
+      * Fichier plan comptable analytique.                                                          
+      *                                                                                             
+     FCPPLAA00  IPE  F  232        DISK                                                             
+      *                                                                                             
+      * Fichier Plan comptable.                                                                     
+      *                                                                                             
+     FCPPAR01   IF   F  128    12AIDISK    KEYLOC(1)                                                
+      *                                                                                             
+      * Fichier Etat.                                                                               
+      *                                                                                             
+     FCP5420P   O    F  198        PRINTER OFLIND(*INOF)                                            
+      *                                                                                             
+      *===================================================================                          
+     D DEB             S             13  2 DIM(12)                                               CA5
+     D CRE             S             13  2 DIM(12)                                               CA5
+     D TLI             S             66    DIM(8) CTDATA PERRCD(1)                               CA5
+     D LI1             S             20    DIM(1) CTDATA PERRCD(1)                                  
+     D TL1             S             66    DIM(4) CTDATA PERRCD(1)                                  
+     D LI              S             20    DIM(3)                                                   
+     D TM              S              2  0 DIM(12) CTDATA PERRCD(12)                                
+      *                                                                ===                          
+     D                 DS                                                                           
+     D  DSPA01                 1      5                                                             
+     D  DSPA02                 6     12                                                             
+     D  DSKPAR                 1     12                                                             
+      *                                                                                             
+      * Période.                                                                                    
+      *                                                                                             
+     D                 DS                                                                           
+     D  PEANNE                 1      4  0                                                          
+     D  PEMOIS                 5      6  0                                                          
+     D  PERIOD                 1      6  0                                                          
+      *                                                                                             
+     D                UDS                                                       CA5414              
+     D  ZCSOC                350    351  0                                      CA5414              
+     D  ZCLSOC               352    366                                         CA5414              
+      *===================================================================                          
+      *                                                                ===                          
+     ICPPLAA00  NS  01                                                                              
+     I                                  3    9 0CPT           L1                CA5414              
+     I                                 10   11 0SER           L3                CA5414              
+     I                                 12   13 0PROD          L2                CA5414              
+     I                                 14   14 0FRAIS         L4                CA5414              
+     I                                 18   42  LIB                             CA5414              
+     I                             P   48  131  DEB                             CA5414              
+     I                             P  132  215  CRE                             CA5414              
+      *                                                                ===                          
+     ICPPAR01   NS  11                                                                              
+     I                                 19   48  PALIBT                          CA5414              
+      *                                                                                             
+      *===================================================================                          
+      * Rupture L4(Etablissements)                                                                  
+      *===================================================================                          
+      *                                                                                             
+     C     *INL4         IFEQ      *ON                                          -+                  
+     C                   MOVEL     ZCSOC         ZON5              5                           CA541
+     C                   MOVE      '30L'         ZON5                                          CA541
+     C                   MOVEL     ZON5          CLEDIC           12                           CA541
+     C                   MOVEL     *BLANKS       ZON7              7                           CA541
+     C                   MOVEL     FRAIS         ZON7                                          CA541
+     C                   MOVE      ZON7          CLEDIC                                        CA541
+     C     CLEDIC        CHAIN     CPPAR01                            21                       CA541
+     C  N21              MOVEL     PALIBT        LIBFRA           30                           CA541
+     C   21              MOVEL     'INCONNU'     LIBFRA                                        CA541
+     C                   ENDIF                                                  -+                  
+      *                                                     !                                       
+      * Récupération Libellé.                                                                       
+      *                                                     !                                       
+     C     *INL3         IFEQ      *ON                                          -+                  
+     C                   MOVE      *BLANK        DSKPAR                                             
+     C                   MOVEL     ZCSOC         DSPA01                                             
+     C                   MOVE      '60L'         DSPA01                                             
+     C                   MOVEL     'LIB03  '     DSPA02                                             
+     C     DSKPAR        CHAIN     CPPAR01                            99                            
+     C   99              MOVEA     LI1(1)        LI(1)                                              
+     C  N99              MOVEL     PALIBT        LI(1)                                              
+      *                                                     !                                       
+      * Récupération Libellé Analytique SERVICE             !                                       
+      *                                                     !                                       
+     C                   MOVEL     *BLANKS       ZON7                                          CA541
+     C                   MOVEL     ZCSOC         ZON5                                          CA541
+     C                   MOVE      '28L'         ZON5                                          CA541
+     C                   MOVEL     ZON5          ZON7                                          CA541
+     C                   MOVE      SER           ZON7                                          CA541
+     C                   MOVE      *BLANK        CLEDIC                                        CA541
+     C                   MOVEL     ZON7          CLEDIC                                        CA541
+     C     CLEDIC        CHAIN     CPPAR01                            21                       CA541
+     C  N21              MOVEL     PALIBT        LIBSER           20                           CA541
+     C   21              MOVEL     'INCONNU'     LIBSER                                        CA541
+      *                                                     !                                       
+      * Récupération Libellé.                                                                       
+      *                                                     !                                       
+     C                   MOVE      *BLANK        DSKPAR                                             
+     C                   MOVEL     ZCSOC         DSPA01                                             
+     C                   MOVE      '60L'         DSPA01                                             
+     C                   MOVEL     'LIB01  '     DSPA02                                             
+     C     DSKPAR        CHAIN     CPPAR01                            99                            
+     C   99              MOVEA     LI1(1)        LI(2)                                              
+     C  N99              MOVEL     PALIBT        LI(2)                                              
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     *INL2         IFEQ      *ON                                          -+                  
+     C                   MOVEL     ZCSOC         ZON5                                          CA541
+     C                   MOVE      '29L'         ZON5                                          CA541
+     C                   MOVEL     ZON5          ZON7                                          CA541
+     C                   MOVE      PROD          ZON7                                          CA541
+     C                   MOVE      *BLANK        CLEDIC                                        CA541
+     C                   MOVEL     ZON7          CLEDIC                                        CA541
+     C     CLEDIC        CHAIN     CPPAR01                            21                       CA541
+     C  N21              MOVEL     PALIBT        LIBPRO           20                           CA541
+     C   21              MOVEL     'INCONNU'     LIBPRO                                        CA541
+      *                                                                                             
+     C                   MOVE      *BLANK        DSKPAR                                             
+     C                   MOVEL     ZCSOC         DSPA01                                             
+     C                   MOVE      '60L'         DSPA01                                             
+     C                   MOVEL     'LIB02  '     DSPA02                                             
+     C     DSKPAR        CHAIN     CPPAR01                            99                            
+     C   99              MOVEA     LI1(1)        LI(3)                                              
+     C  N99              MOVEL     PALIBT        LI(3)                                              
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C                   Z-ADD     £MDEB         I                 2 0                              
+     C                   Z-ADD     0             DEBAN1                                        CA541
+     C                   Z-ADD     0             CREAN1                                        CA541
+     C                   Z-ADD     DEB(PEMOIS)   DEBME1           11 2                         CA541
+     C                   Z-ADD     CRE(PEMOIS)   CREME1           11 2                         CA541
+     C     BOUCLE        TAG                                                                   CA541
+     C                   ADD       DEB(I)        DEBAN1           12 2                         CA541
+     C                   ADD       CRE(I)        CREAN1           12 2                         CA541
+     C     I             COMP      PEMOIS                                 15                   CA541
+     C  N15I             COMP      12                                     12                   CA541
+     C  N15                                                                                         
+     CAN 12              Z-ADD     1             I                                             CA541
+     C  N15                                                                                         
+     CANN12I             ADD       1             I                                             CA541
+     C  N15              GOTO      BOUCLE                                                      CA541
+     C                   ADD       DEBME1        DEBMEN           11 2                         CA541
+     C                   ADD       CREME1        CREMEN           11 2                         CA541
+     C                   ADD       DEBAN1        DEBANN           12 2                         CA541
+     C                   ADD       CREAN1        CREANN           12 2                         CA541
+      *                                                                                             
+     C     FIN           TAG                                                                   CA541
+      *                                                                                             
+     CL1   DEBANN        SUB       CREANN        SOLDE            12 2                         CA541
+     CL1   DEBMEN        SUB       CREMEN        SOLMEN           11 2                         CA541
+     CL1   DEBMEN        ADD       DML1          DML1             11 2                         CA541
+     CL1   CREMEN        ADD       CML1          CML1             11 2                         CA541
+     CL1   SOLMEN        ADD       SML1          SML1             11 2                         CA541
+     CL1   DEBANN        ADD       DAL1          DAL1             12 2                         CA541
+     CL1   CREANN        ADD       CAL1          CAL1             12 2                         CA541
+     CL1   SOLDE         ADD       SDL1          SDL1             12 2                         CA541
+     CL1   DEBMEN        ADD       DML2          DML2             11 2                         CA541
+     CL1   CREMEN        ADD       CML2          CML2             11 2                         CA541
+     CL1   SOLMEN        ADD       SML2          SML2             11 2                         CA541
+     CL1   DEBANN        ADD       DAL2          DAL2             12 2                         CA541
+     CL1   CREANN        ADD       CAL2          CAL2             12 2                         CA541
+     CL1   SOLDE         ADD       SDL2          SDL2             12 2                         CA541
+     CL1   DEBMEN        ADD       DML3          DML3             11 2                         CA541
+     CL1   CREMEN        ADD       CML3          CML3             11 2                         CA541
+     CL1   SOLMEN        ADD       SML3          SML3             11 2                         CA541
+     CL1   DEBANN        ADD       DAL3          DAL3             12 2                         CA541
+     CL1   CREANN        ADD       CAL3          CAL3             12 2                         CA541
+     CL1   SOLDE         ADD       SDL3          SDL3             12 2                         CA541
+     CL1   DEBMEN        ADD       DMLR          DMLR             11 2                         CA541
+     CL1   CREMEN        ADD       CMLR          CMLR             11 2                         CA541
+     CL1   SOLMEN        ADD       SMLR          SMLR             11 2                         CA541
+     CL1   DEBANN        ADD       DALR          DALR             12 2                         CA541
+     CL1   CREANN        ADD       CALR          CALR             12 2                         CA541
+     CL1   SOLDE         ADD       SDLR          SDLR             12 2                         CA541
+      *                                                                                             
+      *===================================================================                          
+      * *INZSR: initialisation.                                                                     
+      *===================================================================                          
+      *                                                                                             
+     C     *INZSR        BEGSR                                                                      
+      *                                                                                             
+      * Réception paramètres.                                                                       
+      *                                                                                             
+     C     *ENTRY        PLIST                                                                      
+     C                   PARM                    àSOC              2                                
+     C                   PARM                    àDTDE             6                                
+     C                   PARM                    àMOUV             1                                
+     C                   PARM                    àOPT              1                                
+     C                   PARM                    àMDEB             2                                
+      *                                                                                             
+      * Initialisation variables.                                                                   
+      *                                                                                             
+     C                   TIME                    W1TIME            6 0                              
+     C                   MOVEL     *DATE         £UDATE            8 0                              
+      *                                                                                             
+     C                   MOVEL     àMDEB         £MDEB             2 0                              
+      *                                                                                             
+      * Période.                                                                                    
+      *                                                                                             
+     C                   MOVEL     àDTDE         PERIOD                                             
+      *                                                                                             
+     C                   MOVEL     PEMOIS        WZN060            6 0                              
+     C                   MOVE      PEANNE        WZN060                                             
+     C                   MOVE      WZN060        W1DCPT            8 0                              
+      *                                                                                             
+      * Année bissextile.                                                                           
+      *                                                                                             
+     C     PEANNE        DIV       4             WZN002            4 0                              
+     C                   MVR                     WZN002                                             
+      *                                                                                             
+     C     WZN002        IFEQ      0                                            -+                  
+     C                   Z-ADD     29            TM(2)                           !                  
+     C                   ELSE                                                    *                  
+     C                   Z-ADD     28            TM(2)                           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C                   MOVEL     TM(PEMOIS)    W1DCPT                                             
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *===================================================================                          
+     OCP5420P   D       L4                  1 01                                                    
+     O         OR       OFNL4                                                   CA5414              
+     O                       TL1(1)              66                                                 
+     O                       TL1(1)             132                                                 
+     O          D       L4                  0                                   CA5414              
+     O         OR       OFNL4                                                   CA5414              
+     O                                           75 'BALANCE ANALYTIQUE'        CA5413              
+     O                       £UDATE             122 '  /  /    '                CA5413              
+     O                       W1TIME             132 '0 :  :  '                                      
+     O                       ZCSOC                2                             CA5413              
+     O                       ZCLSOC              18                             CA5413              
+     O          D    L4                  0  1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                                           75 'BALANCE ANALYTIQUE'        CA5413              
+     O                       ZCLSOC              18                             CA5413              
+     O          D    L4                     0                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                                            8 'CA5414  '                  CA5414              
+     O                     U6                    27 'S I M U L A T I O N '                          
+     O                                           68 'Arrêté au :'               CA5414              
+     O                       W1DCPT              79 '  /  /    '                                    
+     O          D    L4                     1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                       W1DCPT              79 '  /  /    '                                    
+     O          D    L4                     2                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                       TL1(1)              66                                                 
+     O                       TL1(2)             132                                                 
+     O                       PAGE          Z    132                                                 
+     O          D    L4                  1  1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                                           24 '+-----------------------'  CA5412              
+     O                                           25 '+'                                             
+     O          D    L4                     0                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                                            1 '!'                         CA5412              
+     O                       LI(1)               21                                                 
+     O                       FRAIS               24                             CA5414              
+     O                                           25 '!'                                             
+     O                       LIBFRA              57                             CA5414              
+     O          D    L4                     1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                       FRAIS               24                             CA5414              
+     O          D    L4                     1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                                           24 '+-----------------------'  CA5414              
+     O                                           25 '+'                                             
+     O          D    L4                  1  0                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                                           65 'M   O   I   S'             CA5414              
+     O                                          109 'C   U   M   U   L'         CA5414              
+     O          D    L4                     1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                                           65 'M   O   I   S'             CA5414              
+     O                                          109 'C   U   M   U   L'         CA5414              
+     O          D    L4                  1  1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                       TLI(1)              66                             CA5414              
+     O                       TLI(2)             132                             CA5414              
+     O          D    L4                     0                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                       TLI(3)              66                             CA5414              
+     O                       TLI(4)             132                             CA5414              
+     O          D    L4                     1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                       TLI(3)              66                             CA5414              
+     O                       TLI(4)             132                             CA5414              
+     O          D    L4                     1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                       TLI(5)              66                             CA5414              
+     O                       TLI(6)             132                             CA5414              
+     O          D    L4                     1                                   CA5414              
+     O         OR    OFNL4                                                      CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          D    L3                     0                                   CA5414              
+     O         OR    OFNL3                                                      CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O                                            2 '*'                         CA5414              
+     O                       LI(2)               21                                                 
+     O                       SER                 24                             CA5414              
+     O                       LIBSER              45                             CA5414              
+     O          D    L3                     1                                   CA5414              
+     O         OR    OFNL3                                                      CA5414              
+     O                       SER                 24                             CA5414              
+     O          D    L3                     1                                   CA5414              
+     O         OR    OFNL3                                                      CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          D    L2                     0                                   CA5414              
+     O         OR    OFNL2                                                      CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          D    L2                     0                                   CA5414              
+     O         OR    OFNL2                                                      CA5414              
+     O                                            2 '*'                         CA5414              
+     O                       LI(3)               21                                                 
+     O                       PROD                24                             CA5414              
+     O                       LIBPRO              45                             CA5414              
+     O          D    L2                     1                                   CA5414              
+     O         OR    OFNL2                                                      CA5414              
+     O                       PROD                24                             CA5414              
+     O          D    L2                     1                                   CA5414              
+     O         OR    OFNL2                                                      CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          T    L1                     0                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          T    L1                     1                                   CA5414              
+     O                       CPT                  8                             CA5414              
+     O                       LIB                 34                             CA5414              
+     O                       DEBMEN        MB    50                             CA5414              
+     O                       CREMEN        MB    65                             CA5414              
+     O                       SOLMEN        MB    80                             CA5414              
+     O                       DEBANN        MB    97                             CA5414              
+     O                       CREANN        MB   113                             CA5414              
+     O                       SOLDE         MB   129                             CA5414              
+     O          T    L1NL2 OF               1                                   CA5414              
+     O                       TLI(5)              66                             CA5414              
+     O                       TLI(6)             132                             CA5414              
+     O          T    L2                     1                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          T    L2                     0                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O                       PROD                35                             CA5414              
+     O          T    L2                     1                                   CA5414              
+     O                                           11 '** Total'                  CA5414              
+     O                       LI(3)               32                                                 
+     O                       PROD                35                             CA5414              
+     O                       DML2          MB    50                             CA5414              
+     O                       CML2          MB    65                             CA5414              
+     O                       SML2          MB    80                             CA5414              
+     O                       DAL2          MB    97                             CA5414              
+     O                       CAL2          MB   113                             CA5414              
+     O                       SDL2          MB   129                             CA5414              
+     O          T    L2                     1                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          T    L2NL3 OF               1                                   CA5414              
+     O                       TLI(5)              66                             CA5414              
+     O                       TLI(6)             132                             CA5414              
+     O          T    L3                     0                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O                       SER                 35                             CA5414              
+     O          T    L3                     1                                   CA5414              
+     O                                           11 '** Total'                  CA5414              
+     O                       LI(2)               32                                                 
+     O                       SER                 35                             CA5414              
+     O                       DML1          MB    50                             CA5414              
+     O                       CML1          MB    65                             CA5414              
+     O                       SML1          MB    80                             CA5414              
+     O                       DAL1          MB    97                             CA5414              
+     O                       CAL1          MB   113                             CA5414              
+     O                       SDL1          MB   129                             CA5414              
+     O          T    L3                     1                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          T    L3NL4 OF               1                                   CA5414              
+     O                       TLI(5)              66                             CA5414              
+     O                       TLI(6)             132                             CA5414              
+     O          T    L4                     0                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O                       FRAIS               35                             CA5414              
+     O          T    L4                     1                                   CA5414              
+     O                                           11 '** Total'                  CA5414              
+     O                       LI(1)               32                                                 
+     O                       FRAIS               35                             CA5414              
+     O                       DML3          MB    50                             CA5414              
+     O                       CML3          MB    65                             CA5414              
+     O                       SML3          MB    80                             CA5414              
+     O                       DAL3          MB    97                             CA5414              
+     O                       CAL3          MB   113                             CA5414              
+     O                       SDL3          MB   129                             CA5414              
+     O          T    L4                     1                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          T    L4NLR OF               1                                   CA5414              
+     O                       TLI(5)              66                             CA5414              
+     O                       TLI(6)             132                             CA5414              
+     O          T    LR                     0                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          T    LR                     0                                   CA5414              
+     O                                           21 '*** Total Général'         CA5414              
+     O                       DMLR          MB    50                             CA5414              
+     O                       CMLR          MB    65                             CA5414              
+     O                       SMLR          MB    80                             CA5414              
+     O                       DALR          MB    97                             CA5414              
+     O                       CALR          MB   113                             CA5414              
+     O                       SDLR          MB   129                             CA5414              
+     O          T    LR                     1                                   CA5414              
+     O                                           21 '*** Total Général'         CA5414              
+     O                       DMLR          MB    50                             CA5414              
+     O                       CMLR          MB    65                             CA5414              
+     O                       SMLR          MB    80                             CA5414              
+     O                       DALR          MB    97                             CA5414              
+     O                       CALR          MB   113                             CA5414              
+     O                       SDLR          MB   129                             CA5414              
+     O          T    LR                     1                                   CA5414              
+     O                       TLI(7)              66                             CA5414              
+     O                       TLI(8)             132                             CA5414              
+     O          T    LR                     1                                   CA5414              
+     O                       TLI(5)              66                             CA5414              
+     O                       TLI(6)             132                             CA5414              
+**   TLI                                                                       2                    
++----------------------------------+--------------+--------------+                                  
+--------------++---------------+---------------+-----------------+                                  
+!Compte     Intitulé               !   Débit      !   Crédit     !                                  
+    Solde     !!    Débit      !      Crédit   !     Solde       !                                  
++----------------------------------+--------------+--------------+                                  
+--------------++---------------+---------------+-----------------+                                  
+!                                  !              !              !                                  
+              !!               !               !                 !                                  
+**                                                                                                  
+Libellé Non défini                                                                                  
+** TL1                                                                                              
+__________________________________________________________________                                  
+_______________________________________________________ Page                                        
+                                               BALANCE ANALYTIQUE                                   
+------------------------------------------------------------------                                  
+** TM                                                                                               
+312831303130313130313031                                             1                              

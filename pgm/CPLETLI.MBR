@@ -1,0 +1,230 @@
+     H DECEDIT('0,') DFTNAME(CPRECL) DATEDIT(*DMY/)                                                 
+      * Maintenance --------------------------------------------------*                             
+      * Date création               : 05/11/1992                      *                             
+      * Date   dernière modification: ../../....                      *                             
+      * Auteur dernière mofification: ..........                      *                             
+      * Objet  dernière mofification: ..............................  *                             
+      *                                                               *                             
+      * Détail des indicateurs utilisés-------------------------------*                             
+      *                                                               *                             
+      *---------------------------------------------------------------*                             
+      *                                                               *                             
+      *  Constitution des variables:                                  *                             
+      *                                                               *                             
+      *    $VAR  _  Variable écran.                                   *                             
+      *    £VAR  _  Variable programme.                               *                             
+      *    VAR   _  Variable fichier.                                 *                             
+      *                                                               *                             
+      *---------------------------------------------------------------*                             
+      *                                                                                             
+      * G.Livre indexé sur les débits.                                                              
+      *                                                                                             
+     FAFGLI09L  UPE  E           K DISK                                                             
+     F                                     RENAME(AFGLIF01:GLI09)                                   
+      *                                                                                             
+      * G.Livre indexé sur les crédits.                                                             
+      *                                                                                             
+     FAFGLI10L  UF   E           K DISK                                                             
+      *                                                                                             
+      * Plan comptable complémentaire.                                                              
+      *                                                                                             
+     FAFPCGC1L  IF   E           K DISK                                                             
+      *                                                                                             
+      * Fichier imprimante.                                                                         
+      *                                                                                             
+     FCPLETXX   O    F  132        PRINTER OFLIND(*INOA)                                            
+      *                                                                                             
+      *=========================================================================                    
+      * Tableaux.                                                                                   
+      *=========================================================================                    
+      *                                                                                             
+     D IM1             S             68    DIM(7) CTDATA PERRCD(1)              Cadres impression.  
+     D TAB             S              2  0 DIM(12) CTDATA PERRCD(12)                          s jour
+     D TABN            S              3  0 DIM(12) ALT(TAB)                                         
+      *                                                                                             
+     D                 DS                                                                           
+     D  £DTEND                 1      8  0                                                          
+     D  £J1                    1      2  0                                                          
+     D  £M1                    3      4  0                                                          
+     D  £A1                    5      8  0                                                          
+      *                                                                                             
+     D                 DS                                                                           
+     D  £DTENV                 1      8  0                                                          
+     D  £A2                    1      4  0                                                          
+     D  £M2                    5      6  0                                                          
+     D  £J2                    7      8  0                                                          
+      *                                                                                             
+      * G.Livre indexé sur les débits.                                                              
+      *                                                                                             
+     IGLI09         01                                                                              
+      *                                                                                             
+      * - Traitement.                                                                               
+      *                                                                                             
+     C                   MOVE      *OFF          *IN28                                              
+     C                   MOVE      *OFF          *IN41                                              
+     C  N27              MOVEA     '11'          *IN(27)                                            
+      *                                                                                             
+     C                   Z-ADD     GLMTDT        £MTCT                                              
+     C                   Z-ADD     GLDTCP        £DTCP             8 0                              
+     C                   MOVEL     W1DTCP        £WDTCP            4                                
+     C                   MOVEL     GLCCEN        £CCEN             1                                
+      *                                                                                             
+     C     £KEY10        CHAIN     AFGLI10L                           40                            
+      *                                                                                             
+     C  N40GLDTCP        COMP      £DEBU                                40                          
+     C  N40GLDTCP        COMP      £FINI                              40                            
+      *                                                                                             
+     C     £KPCGC        CHAIN     AFPCGC1L                           50                            
+      *                                                                                             
+     C     *IN50         IFEQ      *OFF                                         -+                  
+     C     PCLETR        ANDEQ     'N'                                           !                  
+     C                   MOVE      *ON           £BOOL             1             !                  
+     C                   ELSE                                                    *                  
+     C                   MOVE      *OFF          £BOOL                           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     *IN40         IFEQ      *OFF                                         -+                  
+     C     £BOOL         ANDEQ     *OFF                                          !                  
+      *                                                     !                                       
+     C                   MOVEL     ECLETT        GLCDLE                          !                  
+     C                   MOVEL     £DTENV        GLDTLE                          !                  
+      *                                                     !                                       
+     C                   UPDATE    AFGLIF01                                      !                  
+      *                                                     !                                       
+     C                   MOVEL     ECLETT        GLCDLE                          !                  
+     C                   MOVEL     £DTENV        GLDTLE                          !                  
+     C                   MOVEL     £DTCP         GLDTCP                          !                  
+     C                   MOVEL     £WDTCP        W1DTCP                          !                  
+     C                   MOVEL     £CCEN         GLCCEN                          !                  
+     C                   UPDATE    GLI09                                         !                  
+      *                                                     !                                       
+     C                   MOVE      *ON           *IN41                           !                  
+      *                                                     !                                       
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      *=========================================================================                    
+      * *INZSR: Initialisation.                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     CSR   *INZSR        BEGSR                                                                      
+      *                                                                                             
+      * Réception paramètres.                                                                       
+      *                                                                                             
+     C     *ENTRY        PLIST                                                                      
+     C                   PARM                    £DTDE             8            Période début       
+     C                   PARM                    £DTFI             8            Période fin         
+     C                   MOVEL     £DTDE         £DEBU             8 0                              
+     C                   MOVEL     £DTFI         £FINI             8 0                              
+      *                                                                                             
+      * Description cle AFPCGC1L.                                                                   
+      *                                                                                             
+     C     £KPCGC        KLIST                                                                      
+     C                   KFLD                    GLCSOC                                             
+     C                   KFLD                    GLCPTG                                             
+     C                   KFLD                    GLSCPG                                             
+      *                                                                                             
+      * Date Heure système.                                                                         
+      *                                                                                             
+     C                   Z-ADD     *DATE         £UDATE            8 0                              
+     C                   TIME                    W1TIME            6 0                              
+     C                   Z-ADD     *DATE         £DTEND                                             
+     C                   Z-ADD     £J1           £J2                                                
+     C                   Z-ADD     £M1           £M2                                                
+     C                   Z-ADD     £A1           £A2                                                
+      *                                                                                             
+      * Description de la clé de AFGLI09L.                                                          
+      *                                                                                             
+     C     £KEY09        KLIST                                                                      
+     C                   KFLD                    GLCSOC                                             
+     C                   KFLD                    GLCPTG                                             
+     C                   KFLD                    GLSCPG                                             
+     C                   KFLD                    W1DTCP                                             
+     C                   KFLD                    GLMTDT                                             
+      *                                                                                             
+      * Description de la clé de AFGLI10L.                                                          
+      *                                                                                             
+     C     £KEY10        KLIST                                                                      
+     C                   KFLD                    GLCSOC                                             
+     C                   KFLD                    GLCPTG                                             
+     C                   KFLD                    GLSCPG                                             
+     C                   KFLD                    W1DTCP                                             
+     C                   KFLD                    £MTCT            11 2                              
+      *                                                                                             
+      * Initialisation Code lettrage.                                                               
+      *                                                                                             
+     C                   Z-ADD     UMONTH        MM                2 0                              
+     C                   SUB       1             MM                                                 
+      *                                                                                             
+     C     MM            IFEQ      0                                            -+                  
+     C                   Z-ADD     UDAY          NBRE              3 0           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     MM            IFNE      0                                            -+                  
+     C     MM            LOOKUP    TAB           TABN                     90     !                  
+     C   90              MOVE      TABN          NBRE                            !                  
+     C                   ADD       UDAY          NBRE                            !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     MM            COMP      2                                  91  91                        
+     C   91*YEAR         DIV       4             RESUL             5 0                              
+     C   91              MVR                     REST              5 0                              
+     C   91REST          COMP      0                                      91                        
+     C   91              ADD       1             NBRE                                               
+      *                                                                                             
+     C                   MOVE      NBRE          ECLETT            4                                
+     C                   MOVEL     '£'           ECLETT                                             
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+     OCPLETXX   D    28                     1 01                                                    
+     O         OR    OA                                                                             
+     O                       IM1(5)              68                                                 
+     O          D    28                     1                                                       
+     O         OR    OA                                                                             
+     O                       IM1(7)              68                                                 
+     O                                            8 'CPLETLI '                                      
+     O                       £UDATE              59 '  /  /    '                                    
+     O                       W1TIME              68 '0 :  :  '                                      
+     O          D    28                     2                                                       
+     O         OR    OA                                                                             
+     O                       IM1(6)              68                                                 
+     O                       PAGE          Z     68                                                 
+     O          D    28                     1                                                       
+     O         OR    OA                                                                             
+     O                       IM1(1)              68                                                 
+     O          D    28                     1                                                       
+     O         OR    OA                                                                             
+     O                       IM1(2)              68                                                 
+     O          D    28                     1                                                       
+     O         OR    OA                                                                             
+     O                       IM1(3)              68                                                 
+     O          D    01N40 41               1                                                       
+     O                       IM1(4)              68                                                 
+     O                       GLCSOC               4                                                 
+     O                       GLCPTG              14                                                 
+     O                       GLSCPG              21                                                 
+     O                       GLMTDT              40 ' .   .   .   ,  '                              
+     O                       GLCDLE              66                                                 
+     O          D    01N40 41               1                                                       
+     O                       IM1(4)              68                                                 
+     O                       GLCSOC               4                                                 
+     O                       GLCPTG              14                                                 
+     O                       GLSCPG              21                                                 
+     O                       GLMTCT              59 ' .   .   .   ,  '                              
+     O                       GLCDLE              66                                                 
+     O          T    OA                                                                             
+     O                       IM1(1)              68                                                 
+     O          T    LR 27                                                                          
+     O                       IM1(1)              68                                                 
+      *                                                                                             
+** IM1: Tableau 1 cadres impression.                                                                
++----*-------*--------*------------------*------------------*------+   ---+                         
+!Soc.! Compte/Scompte !      Débit       !      Crédit      ! Let. !   nce!                         
++----*-------*--------*------------------*------------------*------+   ---+                         
+!    !                !                  !                  !      !      !                         
+____________________________________________________________________                                
+_______________________________________________________ Page                                        
+                        LETTRAGE DES COMPTES                                                        
+**                                                                                                  
+010310205903090041200515106181072120824309273103041133412365                                        

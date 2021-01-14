@@ -1,0 +1,461 @@
+     H DATEDIT(*DMY)                                                                                
+      * Maintenance --------------------------------------------------*                             
+      * Date création               : 05/11/1991                      *                             
+      * Date   dernière modification: ../../....                      *                             
+      * Auteur dernière mofification: ................................*                             
+      * Objet  dernière mofification: ................................*                             
+      * ..............................................................*                             
+      * ..............................................................*                             
+      * ..............................................................*                             
+      * ..............................................................*                             
+      *---------------------------------------------------------------*                             
+      *                                                                                             
+     FCP4710FM  CF   E             WORKSTN                                                          
+     F                                     INFDS(TOUCHE)                                            
+     F*                                             KINFSR £ROU01                                   
+      *---------------------------------------------------------------*                             
+      * Fichier Plan comptable                                                                      
+      *                                                                                             
+     FPLG01     IF   F  232    15AIDISK    KEYLOC(1)                                                
+      *---------------------------------------------------------------*                             
+      * Fichier Logique sur ligne de balance                                                        
+      *                                                                                             
+     FPLG07     IF   F  232    18AIDISK    KEYLOC(1)                                                
+      *---------------------------------------------------------------*                             
+      * Tableaux Utilisés                                                                           
+      *                                                                                             
+     D TL              S             60    DIM(3) CTDATA PERRCD(1)              Libellés visus.     
+     D LIB             S              1    DIM(60)                              Types de visu.      
+     D TD              S             13  2 DIM(12)                              Débits 12 mois.     
+     D TC              S             13  2 DIM(12)                              Crédits 12 mois.    
+     D TDE             S             13  2 DIM(12)                              Débits 12 mois.     
+     D TCR             S             13  2 DIM(12)                              Crédits 12 mois.    
+     D TSO             S             13  2 DIM(12)                              Soldes 12 mois.     
+      *                                                                                             
+      *                                                                                             
+      * Débits.                                                                                     
+      *                                                                                             
+     D                 DS                                                                           
+     D  DB                     1    156  2                                                          
+     D                                     DIM(12)                              Débits 12 mois.     
+     D  TD$1                   1     13  2                                                          
+     D  TD$2                  14     26  2                                                          
+     D  TD$3                  27     39  2                                                          
+     D  TD$4                  40     52  2                                                          
+     D  TD$5                  53     65  2                                                          
+     D  TD$6                  66     78  2                                                          
+     D  TD$7                  79     91  2                                                          
+     D  TD$8                  92    104  2                                                          
+     D  TD$9                 105    117  2                                                          
+     D  TD$10                118    130  2                                                          
+     D  TD$11                131    143  2                                                          
+     D  TD$12                144    156  2                                                          
+      *                                                                                             
+      * Crédits.                                                                                    
+      *                                                                                             
+     D                 DS                                                                           
+     D  CR                     1    156  2                                                          
+     D                                     DIM(12)                              Crédits 12 mois.    
+     D  TC$1                   1     13  2                                                          
+     D  TC$2                  14     26  2                                                          
+     D  TC$3                  27     39  2                                                          
+     D  TC$4                  40     52  2                                                          
+     D  TC$5                  53     65  2                                                          
+     D  TC$6                  66     78  2                                                          
+     D  TC$7                  79     91  2                                                          
+     D  TC$8                  92    104  2                                                          
+     D  TC$9                 105    117  2                                                          
+     D  TC$10                118    130  2                                                          
+     D  TC$11                131    143  2                                                          
+     D  TC$12                144    156  2                                                          
+      *                                                                                             
+      * Solde.                                                                                      
+      *                                                                                             
+     D                 DS                                                                           
+     D  SL                     1    156  2                                                          
+     D                                     DIM(12)                              Soldet  12 mois.    
+     D  TS$1                   1     13  2                                                          
+     D  TS$2                  14     26  2                                                          
+     D  TS$3                  27     39  2                                                          
+     D  TS$4                  40     52  2                                                          
+     D  TS$5                  53     65  2                                                          
+     D  TS$6                  66     78  2                                                          
+     D  TS$7                  79     91  2                                                          
+     D  TS$8                  92    104  2                                                          
+     D  TS$9                 105    117  2                                                          
+     D  TS$10                118    130  2                                                          
+     D  TS$11                131    143  2                                                          
+     D  TS$12                144    156  2                                                          
+      *---------------------------------------------------------------*                             
+      * Z.C.U                                                                                       
+      *                                                                                             
+     D                UDS                                                                           
+     D  ZCSOC                350    351                                                             
+     D  ZCLSOC               352    366                                                             
+     D TOUCHE          DS                                                                           
+     D  TOUCH            *STATUS                                                                    
+      *---------------------------------------------------------------*                             
+      * Fichier Plan comptable                                                                      
+      *                                                                                             
+     IPLG01     NS                                                                                  
+     I                                  1    2  PGSOCT                                              
+     I                                  3    4 0PGSCLA                                              
+     I                                 10   15 0PGCPTA                                              
+     I                                 18   47  PGLIB                                               
+     I                             P   48  131  TD                                                  
+     I                             P  132  215  TC                                                  
+     I                                225  227 0PGLBP                                               
+      *---------------------------------------------------------------*                             
+      * Fichier Logique sur ligne de balance                                                        
+      *                                                                                             
+     IPLG07     NS                                                                                  
+     I                                  1    2  PGSOCT                                              
+     I                                 10   15 0PGCPTA                                              
+     I                                 18   47  PGLIB                                               
+     I                             P   48  131  TD                                                  
+     I                             P  132  215  TC                                                  
+     I                                225  227 0PGLBP                                               
+      *---------------------------------------------------------------*                             
+      * Traitement                                                                                  
+      * En init. pgm, récup. période exercice compta en cours;                                      
+      *                                                                                             
+     C                   MOVE      *DATE         £UDATE                                             
+     C                   Z-ADD     0             DB                                                 
+     C                   Z-ADD     0             CR                                                 
+     C                   Z-ADD     0             SL                                                 
+     C                   Z-ADD     0             WKEY15           15 0                              
+      *                                                                                             
+      * Récupération exercice.                                                                      
+      *                                                                                             
+     C                   CALL      'CL1013C'                                                        
+     C                   PARM      ZCSOC         àSOC              2                                
+     C                   PARM      *BLANKS       àDEB              6                                
+     C                   PARM      *BLANKS       àFIN              6                                
+     C                   PARM      *OFF          àRET              1                                
+      *                                                                                             
+     C     àRET          IFEQ      *OFF                                         -+                  
+     C                   MOVEL     '       /'    $1EXER           15             !                  
+     C                   MOVEL     àDEB          $1EXER                          !                  
+     C                   MOVE      àFIN          $1EXER                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C                   MOVEL     ZCSOC         WZON9             9                                
+     C                   SETON                                        97                            
+     C*                    SETON                     9703  =Zones en sortie.                        
+      *----------------------------------------------------                                         
+      * Affichage et lecture écran de choix de visualisation.                                       
+      *                                                                                             
+     C     AFFEC1        TAG                                                                        
+     C                   MOVE      ZCSOC         ECSOC                                              
+     C                   MOVE      ZCLSOC        ECLSOC                                             
+     C                   Z-ADD     9             $L                                                 
+     C                   Z-ADD     47            $C                                                 
+     C     WMSG          IFEQ      *BLANKS                                      -+                  
+     C                   MOVE      '9999'        £PNUM                           !                  
+     C                   EXSR      àMSG                                          !                  
+     C                   MOVEL     £ZON          WMSG                            !                  
+     C                   ENDIF                                                  -+                  
+     C                   EXFMT     ECRAN1                                                           
+     C                   MOVEL     ECCOMP        ECCPT1                                             
+     C                   MOVEL     ECSCOM        ECSCO1            6 0                              
+     C                   SETOFF                                       99                            
+     C                   SETOFF                                       02                            
+      *----------------------------------------------------                                         
+      * Test touches de commande.                                                                   
+      *                                                                                             
+     C*  03                                                                                         
+     C   03              DO                                                     -+                  
+     C                   SETON                                        LR         !                  
+     C                   GOTO      FINPG                                         !                  
+     C                   ENDDO                                                  -+                  
+      *----------------------------------------------------                                         
+      *  01                                                                                         
+     C   01              DO                                                     -+                  
+     C                   EXSR      £AFFIC                                        !                  
+     C                   GOTO      AFFEC1                                        !                  
+     C                   ENDDO                                                  -+                  
+      *                                                                                             
+     C                   MOVEL     *BLANKS       LIB                                                
+      *                                                                                             
+     C   04              DO                                                     ---+                
+      *---------------------------------------------------    !                                     
+      *  Visualisation des comptes généraux                   !                                     
+      *                                                       !                                     
+     C     $ZON          IFEQ      'ECCOMP'                                     --+!                
+      *                                                      !!                                     
+     C                   CALL      'CPINTERA'                                     !!                
+     C                   PARM      '032'         ZTPOX             3              !!                
+     C                   PARM      '005'         ZTPOY             3              !!                
+     C                   PARM      '0'           ZTBOL             1              !!                
+     C                   PARM      '       '     ZTARG             7              !!                
+     C                   PARM      '000000'      àSCG              6              !!                
+     C                   PARM                    ZTLIB            30              !!                
+      *                                                      !!                                     
+     C     ZTARG         IFNE      *BLANKS                                      -+!!                
+     C                   MOVEL     ZTARG         ECCOMP                          !!!                
+     C                   MOVEL     ECCOMP        ECCPT1            7 0           !!!                
+     C                   SETON                                        04         !!!                
+     C                   ELSE                                                    *!!                
+     C                   SETON                                        03         !!!                
+     C                   MOVEL     ZTARG         ECCOMP                          !!!                
+     C                   MOVEL     *BLANKS       ECCPT1                          !!!                
+     C                   ENDIF                                                  -+!!                
+      *                                                      !!                                     
+     C                   GOTO      AFFEC1                                         !!                
+      *                                                      !!                                     
+     C                   ENDIF                                                  --+!                
+      *                                                       !                                     
+     C                   MOVEL     ECCOMP        ECCPT1                            !                
+      *---------------------------------------------------    !                                     
+      * Visualisation des sous-comptes                        !                                     
+      *                                                       !                                     
+     C     $ZON          IFEQ      'ECSCOM'                                     --+!                
+      *                                                      !!                                     
+     C                   MOVEL     ECCOMP        ZTARG                            !!                
+     C                   CALL      'CPINTERA'                                     !!                
+     C                   PARM      '032'         ZTPOX                            !!                
+     C                   PARM      '005'         ZTPOY                            !!                
+     C                   PARM      '1'           ZTBOL                            !!                
+     C                   PARM                    ZTARG                            !!                
+     C                   PARM      '000000'      àSCG                             !!                
+     C                   PARM                    ZTLIB                            !!                
+      *                                                      !!                                     
+     C     ZTARG         IFNE      *BLANKS                                      -+!!                
+     C                   MOVEL     ZTARG         ECCOMP                          !!!                
+     C                   MOVEL     ECCOMP        ECCPT1            7 0           !!!                
+     C                   MOVEL     àSCG          ECSCOM                          !!!                
+     C                   MOVEL     ECSCOM        ECSCO1            6 0           !!!                
+     C                   SETON                                        03         !!!                
+     C                   ELSE                                                    *!!                
+     C                   SETON                                        04         !!!                
+     C                   MOVEL     '000000'      ECSCOM                          !!!                
+     C                   ENDIF                                                  -+!!                
+      *                                                      !!                                     
+     C                   GOTO      AFFEC1                                         !!                
+      *                                                      !!                                     
+     C                   ENDIF                                                  --+!                
+      *                                                       !                                     
+     C                   MOVEL     ECSCOM        ECSCO1                            !                
+      *                                                       !                                     
+     C                   ENDDO                                                  ---+                
+      *----------------------------------------------------                                         
+      * Contrôle choix saisis (Un seul autorisé).                                                   
+      *                                                                                             
+     C     ECCPT1        COMP      0                                  9191                          
+     C  N91ECSCO1        COMP      0                                  9191                          
+     C     ECSCLA        COMP      0                                  9292                          
+     C     ECNLGA        COMP      0                                  9393                          
+      *                                                                                             
+     C   91                                                                                         
+     CAN 92                                                                                         
+     CAN 93                                                                                         
+     COR 91                                                                                         
+     CANN92                                                                                         
+     CAN 93                                                                                         
+     CORN91                                                                                         
+     CAN 92                                                                                         
+     CAN 93                                                                                         
+     COR 91                                                                                         
+     CAN 92                                                                                         
+     CANN93              DO                                                     -+                  
+     C                   MOVEL     '  71'        £PNUM                           !                  
+     C                   EXSR      àMSG                                          !                  
+     C                   MOVEL     £ZON          WMSG                            !                  
+     C                   SETON                                        99         !                  
+     C                   GOTO      AFFEC1                                        !                  
+     C                   ENDDO                                                  -+                  
+      *                                                                                             
+      *----------------------------------------------------                                         
+      * Contrôle existence compte principal-compte auxiliaire.                                      
+      *                                                                                             
+     C   91              DO                                                     --+                 
+     C                   MOVE      ECCPT1        WZON9                            !                 
+     C                   MOVEL     WZON9         WKEY15                           !                 
+     C                   MOVE      ECSCO1        WKEY15                           !                 
+     C     WKEY15        CHAIN     PLG01                              99          !                 
+     C     *IN99         IFEQ      *ON                                          -+!                 
+     C                   MOVEL     '  32'        £PNUM                           !!                 
+     C                   EXSR      àMSG                                          !!                 
+     C                   MOVEL     £ZON          WMSG                            !!                 
+     C                   GOTO      AFFEC1                                        !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   ENDDO                                                  --+                 
+      *                                                                                             
+      *----------------------------------------------------                                         
+      * Visualisation du plan général, par compte/sous-compte.                                      
+      *                                                                                             
+     C     ECCPT1        IFGT      0                                            --+                 
+     C                   Z-ADD     TD            TDE                              !                 
+     C                   Z-ADD     TC            TCR                              !                 
+     C     TDE           SUB       TCR           TSO                              !                 
+     C                   DO        12            I                 2 0          -+!                 
+     C                   Z-ADD     TDE(I)        DB(I)                           !!                 
+     C                   Z-ADD     TCR(I)        CR(I)                           !!                 
+     C                   Z-ADD     TSO(I)        SL(I)                           !!                 
+     C                   ENDDO                                                  -+!                 
+      *---------------------------------------------------   !                                      
+      * Totaux généraux.                                     !                                      
+     C                   XFOOT     TDE           WTOTD                            !                 
+     C                   XFOOT     TCR           WTOTC                            !                 
+     C     WTOTD         SUB       WTOTC         WTOTS                            !                 
+      * Formattage du libellé de visu.                       !                                      
+     C                   MOVEA     TL(1)         LIB(1)                           !                 
+     C                   MOVE      ECCPT1        WZA007            7              !                 
+     C                   MOVEA     WZA007        LIB(13)                          !                 
+     C                   MOVE      '/'           LIB(20)                          !                 
+     C                   MOVE      ECSCO1        WZA006            6              !                 
+     C                   MOVEA     WZA006        LIB(21)                          !                 
+     C                   MOVEA     PGLIB         LIB(28)                          !                 
+     C                   MOVEA     LIB           $LIB                             !                 
+      *                                                      !                                      
+     C                   GOTO      AFFEC2                                         !                 
+     C                   ENDIF                                                  --+                 
+      *----------------------------------------------------                                         
+      * Visualisation du plan général, par sous-classe.                                             
+      *                                                                                             
+     C     ECSCLA        IFGT      0                                            ---+                
+     C                   MOVE      *BLANKS       WKEY15                            !                
+     C                   MOVEL     ZCSOC         WZON4             4               !                
+     C                   MOVE      ECSCLA        WZON4                             !                
+     C                   MOVEL     WZON4         WKEY15                            !                
+     C                   SETOFF                                       05           !                
+     C     WKEY15        SETLL     PLG01                                           !                
+      * Cumul Débits/Crédits pour la sous-classe choisie,     !                                     
+     C     WKEY15        DOWGT     0                                            --+!                
+     C                   READ      PLG01                                  05      !!                
+     C  N05PGSOCT        COMP      ZCSOC                              0505        !!                
+     C  N05ECSCLA        COMP      PGSCLA                             0505        !!                
+      *                                                      !!                                     
+     C  N05PGCPTA        IFEQ      0                                            -+!!                
+     C                   ADD       TD            TDE                             !!!                
+     C                   ADD       TC            TCR                             !!!                
+     C                   ENDIF                                                  -+!!                
+      *                                                      !!                                     
+     C  N05              ENDDO                                                  --+!                
+      * Calcul Solde.                                         !                                     
+     C     TDE           SUB       TCR           TSO                               !                
+     C* AFFECTATION DES ZONES ÉCRANS                          !                                     
+     C                   DO        12            I                 2 0          -+ !                
+     C                   Z-ADD     TDE(I)        DB(I)                           ! !                
+     C                   Z-ADD     TCR(I)        CR(I)                           ! !                
+     C                   Z-ADD     TSO(I)        SL(I)                           ! !                
+     C                   ENDDO                                                  -+ !                
+      * Totaux généraux.                                      !                                     
+     C                   XFOOT     TDE           WTOTD                             !                
+     C                   XFOOT     TCR           WTOTC                             !                
+     C     WTOTD         SUB       WTOTC         WTOTS                             !                
+      * Formattage du libellé de visu.                        !                                     
+     C                   MOVEA     TL(2)         LIB(1)                            !                
+     C                   MOVE      ECSCLA        WZA002            2               !                
+     C                   MOVEA     WZA002        LIB(18)                           !                
+     C                   MOVEA     LIB           $LIB                              !                
+      *                                                       !                                     
+     C                   GOTO      AFFEC2                                          !                
+     C                   ENDIF                                                  ---+                
+      *----------------------------------------------------                                         
+      * Visualisation du plan général, par ligne de regroupement A.                                 
+      *                                                                                             
+     C                   MOVEL     ECNLGA        WKEY18           18                                
+     C                   SETOFF                                       05                            
+     C     WKEY18        SETLL     PLG07                                                            
+      * Cumul Débits/Crédits pour la ligne de regroupement choisie, en  boucle.                     
+     C     WKEY18        DOWNE     *BLANKS                                      --+                 
+     C                   READ      PLG07                                  05      !                 
+     C  N05PGSOCT        COMP      ZCSOC                              0505        !                 
+     C  N05ECNLGA        COMP      PGLBP                              0505        !                 
+      *                                                      !                                      
+     C  N05PGCPTA        IFEQ      0                                            -+!                 
+     C                   ADD       TD            TDE                             !!                 
+     C                   ADD       TC            TCR                             !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C  N05              ENDDO                                                  --+                 
+      * Calcul Solde.                                                                               
+     C     TDE           SUB       TCR           TSO                                                
+     C* AFFECTATION DES ZONES ECRANS                                                                
+     C                   DO        12            I                 2 0          -+                  
+     C                   Z-ADD     TDE(I)        DB(I)                           !                  
+     C                   Z-ADD     TCR(I)        CR(I)                           !                  
+     C                   Z-ADD     TSO(I)        SL(I)                           !                  
+     C                   ENDDO                                                  -+                  
+      * Totaux généraux.                                                                            
+     C                   XFOOT     TDE           WTOTD                                              
+     C                   XFOOT     TCR           WTOTC                                              
+     C     WTOTD         SUB       WTOTC         WTOTS                                              
+      * Formattage du libellé de visu.                                                              
+     C                   MOVEA     TL(3)         LIB(1)                                             
+     C                   MOVE      ECNLGA        WZA003            3                                
+     C                   MOVEA     WZA003        LIB(33)                                            
+     C                   MOVEA     LIB           $LIB                                               
+      * Affichage et lecture écran de visualisation.                                                
+      *                                                                                             
+     C     AFFEC2        TAG                                                                        
+     C                   Z-ADD     2             $L                                                 
+     C                   Z-ADD     2             $C                                                 
+     C                   EXFMT     ECRAN2                                                           
+      *----------------------------------------------------                                         
+      * Test touches de commande.                                                                   
+      *                                                                                             
+     C*  03                                                                                         
+     C   03              DO                                                     -+                  
+     C                   MOVEL     *BLANKS       ECCOMP                          !                  
+     C                   MOVEL     *BLANKS       ECSCOM                          !                  
+     C                   MOVE      *BLANKS       WMSG                            !                  
+     C                   Z-ADD     0             ECCPT1                          !                  
+     C                   Z-ADD     0             ECSCO1                          !                  
+     C                   Z-ADD     0             ECSCLA                          !                  
+     C                   Z-ADD     0             ECNLGA                          !                  
+     C                   Z-ADD     0             TCR                             !                  
+     C                   Z-ADD     0             TDE                             !                  
+     C                   Z-ADD     0             TSO                             !                  
+     C                   Z-ADD     0             DB                              !                  
+     C                   Z-ADD     0             CR                              !                  
+     C                   Z-ADD     0             SL                              !                  
+     C                   Z-ADD     0             WTOTD                           !                  
+     C                   Z-ADD     0             WTOTC                           !                  
+     C                   Z-ADD     0             WTOTS                           !                  
+     C                   Z-ADD     9             $L                              !                  
+     C                   Z-ADD     47            $C                              !                  
+     C                   GOTO      AFFEC1                                        !                  
+     C                   ENDDO                                                  -+                  
+      *                                                                                             
+     C                   GOTO      AFFEC2                                                           
+      * Fin.                                                                                        
+      *                                                                                             
+     C     FINPG         TAG                                                                        
+      *==================================================================                           
+      *                                                                                             
+      * ROUTINE £AFFIC: AIDE                                                                        
+      *                                                                                             
+      *==================================================================                           
+     C     £AFFIC        BEGSR                                                                      
+      *                                                                                             
+     C                   MOVEL     *BLANKS       £PROG            10                                
+     C                   MOVEL     'CP4710'      £PROG                                              
+     C                   MOVEL     'E1'          £FMT              2                                
+     C                   CALL      'AFHELP'                                                         
+     C                   PARM                    £PROG                                              
+     C                   PARM                    £FMT                                               
+     C                   SETOFF                                         99                          
+     C                   SETON                                        03                            
+     C                   ENDSR                                                                      
+      *=============================================================                                
+      *                                                                                             
+      * Récupération du N° Message                                                                  
+      * Type : ERREUR,INFO,ENTETE                                                                   
+      *                                                                                             
+      *=============================================================                                
+      *                                                                                             
+     C     àMSG          BEGSR                                                                      
+     C     'ERRMSG'      CAT       ' '           £PTYP            10                                
+     C                   CALL      'AFMSG4'                                                         
+     C                   PARM                    £PTYP                                              
+     C                   PARM                    £PNUM             4                                
+     C                   PARM                    £ZON             79                                
+     C                   ENDSR                                                                      
+      *                                                                                             
+**  TL: Tableau libellés visus.                                                                     
+Visu compte                                                                                         
+Visu sous-classe                                                                                    
+Visu par lignes de regroupement                                                                     

@@ -1,0 +1,701 @@
+     H DATEDIT(*YMD/)                                                                               
+     F* Maintenance --------------------------------------------------*                             
+     F* Date crÈation               : 06/04/1993                      *                             
+     F* Date   derniËre modification: ../../....                      *                             
+     F* Auteur derniËre mofification: ..............................  *                             
+     F* Objetr derniËre mofification: ..............................  *                             
+     F* ............................................................  *                             
+     F* Indicateurs.Libres -------------------------------------------*                             
+     F* ............................................................. *                             
+     F* Constitutaion des variables ----------------------------------*                             
+     F* ..............................................................*                             
+     F* ..............................................................*                             
+     F*---------------------------------------------------------------*                             
+      * Fichier de remises.                                                                         
+     FINREAP00  IPE  F  268        DISK                                                             
+      * Fichier paramËtres.                                                                         
+     FAFPRML1   IF   E           K DISK                                                             
+      * Fichier Banque.                                                                             
+     FBANQUE    IF   F  256     9AIDISK    KEYLOC(1)                                                
+     F* Fichier ouverture exercice comptable annÈe en cours.                                        
+     FAFPCO01E  IF   F  236    15AIDISK    KEYLOC(1)                                                
+     F* Fichier ouverture exercice comptable annÈe-1.                                               
+     FAFPCO01A  IF   F  236    15AIDISK    KEYLOC(1)                                                
+      * Fichier des verouillages journaux.(A-1)                                                     
+     FAFCJO1LA  UF   F  232     5AIDISK    KEYLOC(1)                                                
+      * Fichier des verouillages journaux.(A)                                                       
+     FAFCJO1LE  UF   F  232     5AIDISK    KEYLOC(1)                                                
+      * - Fichier calendrier.                                                                       
+     FAFCALE00  IF   E           K DISK                                                             
+      * Fichier d'impression                                                                        
+     FCR7150P   O    F  132        PRINTER OFLIND(*INOA)                                            
+      * Fichier des recettes.                                                                       
+     FMVTJRE    O  A F  267        DISK                                                             
+      *                                                                                             
+      * Fichier SociÈtÈ                                                                             
+      *                                                                                             
+     FSOC01     IF   F  292     2AIDISK    KEYLOC(1)                                                
+      *                                                                                             
+     D TABCOI          S              1  0 DIM(6) CTDATA PERRCD(1)                                  
+     D TABTIT          S             58    DIM(6) ALT(TABCOI)                                       
+      *                                                                                             
+     D TL1             S             66    DIM(2) CTDATA PERRCD(1)                                  
+      *                                                                                             
+     D TLI             S             30    DIM(6) CTDATA PERRCD(1)                                  
+      *                                                                                             
+     D TAB1            S              2  0 DIM(12) CTDATA PERRCD(01)                                
+     D TAB2            S              2  0 DIM(12) ALT(TAB1)                                        
+      *                                                                                             
+      * Initialisation tableau issu zones externes.                                                 
+     D NP              S              7  0 DIM(12)                                               CP3
+     D                UDS                                                                           
+     D  ZCCSOC               350    351  0                                                          
+     D  ZCLSOC               352    366                                                             
+      * DS AFPCO01X                                                                                 
+     D                 DS                                                                           
+     D  £SOC1                  1      2                                         CP3110              
+     D  £PER                   3     15                                         CP3110              
+     D  KPCO01                 1     15                                         CP3110              
+      * DS AFCJOL1X                                                                                 
+     D                 DS                                                                           
+     D  £SOC2                  1      2                                         CP3110              
+     D  £JOOD                  3      5                                         CP3110              
+     D  KCJO01                 1      5                                         CP3110              
+      *                                                                                             
+     D                 DS                                                                           
+     D  £AN                    1      4  0                                                          
+     D  £MO                    5      6  0                                                          
+     D  £JO                    7      8  0                                                          
+     D  £DATE                  1      8  0                                                          
+     IINREAP00  NS  01                                                                              
+     I                                  1    2  REOPER                                              
+     I                                  3    5  REJOUR                                              
+     I                                  8    9  REREGL                                              
+     I                                 26   29 0REECAA                                              
+     I                                 30   31 0REECMM                                              
+     I                                 32   33 0REECJJ                                              
+     I                                 26   33 0REDAEC        L1                                    
+     I                                 26   31 0REAAMM                                              
+     I                                 42   43 0RESOCT                                              
+     I                                 57   63 0RENUEF                                              
+     I                             P   71   76 2REDEBI                                              
+     I                                113  113 0RETYRE        L3                                    
+     I                                114  120  REBARE        L4                                    
+     I                                129  135 0RENURE                                              
+     I                                262  268 0RENFOL                                              
+     IBANQUE    NS                                                                                  
+     I                                 10   33  BQNOM                                               
+     IAFPCO01E  NS                                                                                  
+     I                                 30   35 0PCPDEB                          CP3110              
+     I                                 36   41 0PCPFIN                          CP3110              
+     IAFPCO01A  NS                                                                                  
+     I                                 30   35 0PCPDEB                          CP3110              
+     I                                 36   41 0PCPFIN                          CP3110              
+     IAFCJO1LA  NS                                                                                  
+     I                             P  150  197  NP                              CP3110              
+     I                                210  213 0CJNLIG                          CP3110              
+     IAFCJO1LE  NS                                                                                  
+     I                             P  150  197  NP                              CP3110              
+     I                                210  213 0CJNLIG                          CP3110              
+      *                                                                                             
+     ISOC01     NS                                                                                  
+     I                                289  291  SOCDEV                                              
+      * Initialisation.                                                                             
+      * Traitement rupture L3                                                                       
+     C     *INL3         IFEQ      *ON                                          -+                  
+     C                   MOVEL     *OFF          *IN31                           !                  
+     C                   Z-ADD     0             PAGE                            !                  
+     C                   MOVEL     REBARE        ECCPT1            7 0           !                  
+      *          & Renseignement Bancaire.                  !                                       
+     C                   MOVEL     RESOCT        KBANQU            9             !                  
+     C                   MOVE      REBARE        KBANQU                          !                  
+     C     KBANQU        CHAIN     BANQUE                             52         !                  
+     C                   MOVE      *BLANK        NOMBQE           15             !                  
+     C                   MOVEL     BQNOM         NOMBQE                          !                  
+      *          & Code journal pour gÈnÈration Ècriture    !                                       
+     C                   Z-ADD     36            PRNUMT                          !                  
+     C                   MOVEL     REBARE        PRARGU                          !                  
+     C     KPRML1        CHAIN     AFPRML1                            50         !                  
+     C  N503             SUBST     PRZONE:1      £JOOD             3             !                  
+     C  N50              Z-ADD     PRMTT1        £NBJ              3 0           !                  
+     C  N50              MOVE      PRZONE        £COPR             3             !                  
+     C   50              MOVEL     '900'         £JOOD                           !                  
+     C   50              Z-ADD     0             £NBJ                            !                  
+     C   50              MOVE      'REM'         £COPR                           !                  
+      *          & Existence Jrnal pour gÈnÈration Ècritur  !                                       
+     C                   Z-ADD     07            PRNUMT                          !                  
+     C                   MOVEL     *BLANKS       PRARGU                          !                  
+     C     £JOOD         CAT(P)    ' '           PRARGU                          !                  
+     C     KPRML1        CHAIN     AFPRML1                            29         !                  
+      *                                                     !                                       
+     C                   ENDIF                                                  -+                  
+      * Traitement rupture L1 (Date ÈchÈance).                                                      
+     C     *INL1         IFEQ      *ON                                          --+                 
+      *          & LibellÈ type de remise.                   !                                      
+     C                   SELECT                                                 -+!                 
+      *          & Remise ‡ l'encaissement en valeur        !!                                      
+     C     RETYRE        WHENEQ    3                                             *!                 
+     C     *IN96         ANDEQ     *OFF                                          !!                 
+     C                   Z-ADD     5             £I                1 0           !!                 
+     C     £I            LOOKUP    TABCOI        TABTIT                   10     !!                 
+      *          & Remise ‡ l'encaissement non en valeur    !!                                      
+     C     RETYRE        WHENEQ    3                                             *!                 
+     C     *IN96         ANDEQ     *ON                                           !!                 
+     C                   Z-ADD     RETYRE        £I                1 0           !!                 
+     C     £I            LOOKUP    TABCOI        TABTIT                   10     !!                 
+     C                   OTHER                                                   *!                 
+     C     RETYRE        LOOKUP    TABCOI        TABTIT                   10     !!                 
+     C                   ENDSL                                                  -+!                 
+     C                   Z-ADD     RETYRE        W                 1 0            !                 
+     C                   MOVEL     TLI(W)        MLIB             30              !                 
+     C                   MOVE      RENURE        MLIB                             !                 
+     C                   MOVEL     TLI(W)        £LIB             20              !                 
+      *          & N∞ de remise.                             !                                      
+     C                   MOVEL     ZCCSOC        ‡SOC2                            !                 
+     C                   MOVEL(P)  'REMREC'      ‡ARG2                            !                 
+     C                   CALL      'PM3100C'                                      !                 
+     C                   PARM                    ‡SOC2             2              !                 
+     C                   PARM      'L'           ‡TYP2             1              !                 
+     C                   PARM      '21'          ‡TAB2             2              !                 
+     C                   PARM                    ‡ARG2             7              !                 
+     C                   PARM      'M'           ‡TZO2             1              !                 
+     C                   PARM      '1'           ‡NZO2             1              !                 
+     C                   PARM      '0000000'     ‡VAL2             7              !                 
+     C                   PARM      *OFF          ‡RET2             1              !                 
+      *                                                      !                                      
+     C     ‡RET2         IFEQ      *OFF                                         -+!                 
+     C                   MOVE      ‡VAL2         £REMI             7 0           !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   Z-ADD     09            PRNUMT                           !                 
+     C     REJOUR        CAT(P)    ' '           PRARGU                           !                 
+     C     KPRML1        CHAIN     AFPRML1                            29          !                 
+     C     *IN29         IFEQ      *OFF                                         -+!                 
+     C                   MOVEL     PRMTT1        ECCPT2            7 0           !!                 
+     C                   ENDIF                                                  -+!                 
+     C                   Z-ADD     *ZEROS        ECSCP2            6 0            !                 
+      *          & Inversion date ÈchÈance.                  !                                      
+     C                   MOVE      REECAA        WM8               8              !                 
+     C                   MOVEL     REECJJ        WM4               4              !                 
+     C                   MOVE      REECMM        WM4                              !                 
+     C                   MOVEL     WM4           WM8                              !                 
+     C                   MOVE      WM8           MDECH             8 0            !                 
+      *                                                      !                                      
+     C                   Z-ADD     REDAEC        ECSCP2                           !                 
+      *                                                      !                                      
+     C     £GEN          IFEQ      'J'                                          -+!                 
+     C                   Z-ADD     *DATE         ECDACP            8 0           !!                 
+     C                   Z-ADD     *DATE         £AAMM             6 0           !!                 
+     C                   ELSE                                                    *!                 
+     C                   Z-ADD     REDAEC        ECDACP                          !!                 
+     C                   Z-ADD     REDAEC        £AAMM                           !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   Z-ADD     *DATE         ECDAEV            8 0            !                 
+      * Recherche du numÈro de piËce.                        !                                      
+     C                   EXSR      ‡NPIE                                          !                 
+      *                                                      !                                      
+     C                   ENDIF                                                  --+                 
+      *          Si Date de valeur.                                                                 
+      *          Ctrl si traite ‡ Vue                                                               
+     C     *IN96         IFEQ      *OFF                                         --+                 
+     C                   Z-ADD     REDAEC        £DATE                            !                 
+     C     £NBJ          IFNE      *ZEROS                                       -+!                 
+     C                   EXSR      ‡DATE                                         !!                 
+     C                   ENDIF                                                  -+!                 
+      *          & Calcul de la date de valeur.              !                                      
+      *                                                      !                                      
+     C                   MOVEL     £DATE         ‡DAT              8              !                 
+     C                   MOVEL     REBARE        ‡BQE              7              !                 
+     C                   MOVEL     RESOCT        £SOCA             2              !                 
+     C     REDEBI        IFGT      0                                            -+!                 
+     C                   MOVEL     'D'           ‡TYP              1             !!                 
+     C                   ELSE                                                    *!                 
+     C                   MOVEL     'C'           ‡TYP                            !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   CALL      'CP1066'                                       !                 
+      *                                                      !                                      
+     C                   PARM                    £SOCA                            !                 
+     C                   PARM                    ‡BQE                             !                 
+     C                   PARM                    REREGL                           !                 
+     C                   PARM                    ‡TYP                             !                 
+     C                   PARM                    ‡DAT                             !                 
+     C                   MOVEL     ‡DAT          £DATE                            !                 
+     C                   ENDIF                                                  --+                 
+      *          & NumÈro de ligne.                                                                 
+     C                   EXSR      ‡NLIG                                                            
+      * Ctrl si au moins 1 enreg pour Èdition entete.                                               
+     C                   MOVE      *OFF          *IN32                                              
+     C  N31              MOVEA     '11'          *IN(31)                                            
+     C  N33              MOVE      *ON           *IN33                                              
+      *          & CrÈation enregistrement                                                          
+     C                   EXSR      ‡CONVT                                                           
+     C                   EXCEPT    AJREC                                                            
+      */////////////////////////////////////////////////////////                                    
+      * Initialisation.                                     INZSR                                   
+      *           ∞                                                                                 
+      *           ∞                                                                                 
+      *           ∞                                                                                 
+      */////////////////////////////////////////////////////////                                    
+     C     *INZSR        BEGSR                                                                      
+      * ClÈ AFPRML1.                                                                                
+     C     KPRML1        KLIST                                                                      
+     C                   KFLD                    ZCCSOC                                             
+     C                   KFLD                    PRNUMT                                             
+     C                   KFLD                    PRTYPT                                             
+     C                   KFLD                    PRARGU                                             
+     C                   MOVEL     'L'           PRTYPT                                             
+      * Ctrl si date de valeur.                                                                     
+     C                   Z-ADD     99            PRNUMT                                             
+     C                   MOVEL     'GESVAL '     PRARGU                                             
+     C     KPRML1        CHAIN     AFPRML1                            96                            
+      *                                                                                             
+     C  N96              MOVEL     PRZONE        £VAL              1                                
+     C  N96£VAL          COMP      'O'                                9696                          
+      * Ctrl si date de valeur.                                                                     
+     C                   MOVEL     'J'           £GEN                                               
+     C                   Z-ADD     99            PRNUMT                                             
+     C                   MOVEL     'GENDATE'     PRARGU                                             
+     C     KPRML1        CHAIN     AFPRML1                            46                            
+      *                                                                                             
+     C  N46              MOVEL     PRZONE        £GEN              1                                
+      *                                                                                             
+     C                   TIME                    W1TIME            6 0                              
+     C                   Z-ADD     0             WZN112           11 2                              
+     C                   Z-ADD     0             WZN005            5 3                              
+     C                   Z-ADD     0             W1TAUX           11 6                              
+     C                   Z-ADD     0             W1DTAP            8 0                              
+     C                   Z-ADD     0             £DATE                                              
+      *                                                                                             
+      * Code devise societÈ.                                                                        
+      *                                                                                             
+     C     ZCCSOC        CHAIN     SOC01                              46                            
+      *                                                                                             
+     C     *IN46         IFEQ      *OFF                                         -+                  
+     C                   MOVEL     SOCDEV        W1SDEV            3             !                  
+     C                   ELSE                                                    *                  
+     C                   MOVEL     'FRF'         W1SDEV                          !                  
+     C                   MOVE      *OFF          *IN46                           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Ctrl si conversion FRANC <--> EURO                                                          
+      *                                                                                             
+     C                   Z-ADD     99            PRNUMT                                             
+     C                   MOVEL     'CONVERS'     PRARGU                                             
+     C     KPRML1        CHAIN     AFPRML1                            46                            
+     C                   MOVE      *OFF          £CALC                                              
+      *                                                                                             
+     C     *IN46         IFEQ      *OFF                                         --+                 
+     C                   MOVEL     PRZONE        £ZONE             1              !                 
+     C     £ZONE         IFEQ      'O'                                          -+!                 
+     C                   MOVE      *ON           £CALC             1             !!                 
+     C                   ENDIF                                                  -+!                 
+     C                   ENDIF                                                  --+                 
+      *                                                                                             
+      * Ctrl si devise sociÈtÈ FRANC.                                                               
+      *                                                                                             
+     C                   Z-ADD     33            PRNUMT                                             
+     C                   MOVEL(P)  W1SDEV        PRARGU                                             
+     C     KPRML1        CHAIN     AFPRML1                            46                            
+     C                   MOVEL     'F'           £TYPE                                              
+      *                                                                                             
+     C     *IN46         IFEQ      *OFF                                         -+                  
+     C                   MOVEL     PRZONE        £TYPE             1             !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C                   ENDSR                                                                      
+      */////////////////////////////////////////////////////////                                    
+      * Calcul date .                                      ‡DATE                                    
+      *           ∞                                                                                 
+      *           ∞                                                                                 
+      *           ∞                                                                                 
+      */////////////////////////////////////////////////////////                                    
+     C     ‡DATE         BEGSR                                                                      
+      *                                                                                             
+     C     *DATE         CHAIN     AFCALE00                           16                            
+     C     *IN16         IFEQ      *OFF                                         -+                  
+     C                   Z-ADD     AFNCPT        £DEBU            15 5           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     REDAEC        CHAIN     AFCALE00                           16                            
+     C     *IN16         IFEQ      *OFF                                         -+                  
+     C                   Z-ADD     AFNCPT        £FIN             15 5           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     £FIN          SUB       £DEBU         £DIF             15 5                              
+      *                                                                                             
+     C     £DIF          COMP      £NBJ                                 17                          
+      *                                                                                             
+     C     *IN17         IFEQ      *ON                                          --+                 
+     C                   Z-ADD     *MONTH        £MO                              !                 
+     C                   Z-ADD     *YEAR         £AN                              !                 
+      *                                                      !                                      
+     C     *DAY          ADD       £NBJ          £JO                              !                 
+     C     £MO           LOOKUP    TAB1          TAB2                     88      !                 
+      *                                                      !                                      
+     C     *IN88         IFEQ      *ON                                          -+!                 
+     C     £JO           ANDGT     TAB2                                          !!                 
+     C                   ADD       1             £MO                             !!                 
+     C                   SUB       TAB2          £JO                             !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C     £MO           IFGT      12                                           -+!                 
+     C                   ADD       1             £AN                             !!                 
+     C                   Z-ADD     1             £MO                             !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   ENDIF                                                  --+                 
+      *                                                                                             
+     C                   ENDSR                                                                      
+      */////////////////////////////////////////////////////////                                    
+      * Ctrl exercice et atribution du numÈro de piËce.    ‡NPIE                                    
+      *           ∞                                                                                 
+      *           ∞                                                                                 
+      *           ∞                                                                                 
+      */////////////////////////////////////////////////////////                                    
+     C     ‡NPIE         BEGSR                                                                      
+      * Ctrl exercice.                                                                              
+     C                   MOVEL     RESOCT        £SOC1                                              
+     C                   MOVEL     *ZEROS        £PER                                               
+     C     KPCO01        CHAIN     AFPCO01E                           98                            
+      *          ß Exercice en cours                                                                
+     C     *IN98         IFEQ      *OFF                                         -+                  
+     C     £AAMM         ANDGE     PCPDEB                                        !                  
+     C     £AAMM         ANDLE     PCPFIN                                        !                  
+     C                   MOVE      *ON           *IN41                           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     KPCO01        CHAIN     AFPCO01A                           98                            
+      *          ß Exercice N-1                                                                     
+     C     *IN98         IFEQ      *OFF                                         -+                  
+     C     £AAMM         ANDGE     PCPDEB                                        !                  
+     C     £AAMM         ANDLE     PCPFIN                                        !                  
+     C                   MOVE      *OFF          *IN41                           !                  
+     C                   ENDIF                                                  -+                  
+      * Recherche du numÈro de piËce.                                                               
+     C                   MOVEL     RESOCT        £SOC2                                              
+     C     *IN41         IFEQ      *ON                                          -+                  
+      *          ß Exercice en cours                        !                                       
+     C     KCJO01        CHAIN     AFCJO1LE                           98         !                  
+     C                   ELSE                                                    *                  
+      *          ß Exercice N-1                             !                                       
+     C     KCJO01        CHAIN     AFCJO1LA                           98         !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     *IN98         IFEQ      *OFF                                         --+                 
+      *                                                      !                                      
+     C                   Z-ADD     *MONTH        £MM               2 0            !                 
+     C     NP(£MM)       IFEQ      *ZEROS                                       -+!                 
+     C                   MOVE      UYEAR         WZA001            1 0           !!                 
+     C                   MOVEL     WZA001        WZA003            3 0           !!                 
+     C                   MOVE      *MONTH        WZA003                          !!                 
+     C                   MOVEL     WZA003        NP(£MM)                         !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   ADD       1             NP(£MM)                          !                 
+     C                   MOVE      NP(£MM)       MPIEC             7 0            !                 
+      *                                                      !                                      
+     C     *IN41         IFEQ      *ON                                          -+!                 
+      *          ß Exercice en cours                        !!                                      
+     C                   EXCEPT    £MCJPE                                        !!                 
+     C                   ELSE                                                    *!                 
+      *          ß Exercice N-1                             !!                                      
+     C                   EXCEPT    £MCJPA                                        !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   ENDIF                                                  --+                 
+      *                                                                                             
+     C                   ENDSR                                                                      
+      */////////////////////////////////////////////////////////                                    
+      * Recherche numÈro de ligne.                         ‡NLIG                                    
+      *           ∞                                                                                 
+      *           ∞                                                                                 
+      *           ∞                                                                                 
+      */////////////////////////////////////////////////////////                                    
+     C     ‡NLIG         BEGSR                                                                      
+      * Recherche du numÈro de ligne.                                                               
+     C     *IN41         IFEQ      *ON                                          -+                  
+      *          ß Exercice en cours                        !                                       
+     C     KCJO01        CHAIN     AFCJO1LE                           98         !                  
+     C                   ELSE                                                    *                  
+      *          ß Exercice N-1                             !                                       
+     C     KCJO01        CHAIN     AFCJO1LA                           98         !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     *IN98         IFEQ      *OFF                                         --+                 
+      *                                                      !                                      
+     C     *IN41         IFEQ      *ON                                          -+!                 
+      *          ß Exercice en cours                        !!                                      
+     C     CJNLIG        ADD       1             ECCLI1            4 0           !!                 
+     C                   EXCEPT    £MCJLE                                        !!                 
+     C                   ELSE                                                    *!                 
+      *          ß Exercice N-1                             !!                                      
+     C     CJNLIG        ADD       1             ECCLI1                          !!                 
+     C                   EXCEPT    £MCJLA                                        !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   ENDIF                                                  --+                 
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡CVTEU:                                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡CVTEU        BEGSR                                                                      
+      *                                                                                             
+     C                   MOVEL     ZCCSOC        ‡SOCI                                              
+     C                   CALL      'EU0010'                                                         
+     C                   PARM                    ‡SOCI                                              
+     C                   PARM                    ‡DEVI                                              
+     C                   PARM                    ‡MTDV                                              
+     C                   PARM                    ‡MTEU                                              
+     C                   PARM                    ‡DAT1                                              
+     C                   PARM                    ‡TAUX                                              
+     C                   PARM                    ‡MTE1                                              
+     C                   PARM      *OFF          ‡RET                                               
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡CVTDV:                                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡CVTDV        BEGSR                                                                      
+      *                                                                                             
+     C                   MOVEL     ZCCSOC        ‡SOCI                                              
+     C                   CALL      'EU0011'                                                         
+     C                   PARM                    ‡SOCI             2                                
+     C                   PARM                    ‡DEVI             3                                
+     C                   PARM                    ‡MTEU            11                                
+     C                   PARM                    ‡MTDV            11                                
+     C                   PARM                    ‡DAT1             8                                
+     C                   PARM                    ‡TAUX            11                                
+     C                   PARM                    ‡MTE1            15                                
+     C                   PARM      *OFF          ‡RET              1                                
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡CONVT:                                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡CONVT        BEGSR                                                                      
+      *                                                                                             
+     C                   Z-ADD     *ZEROS        W1MTEU           11 2                              
+     C                   Z-ADD     *ZEROS        W1TXEU           11 6                              
+      *                                                                                             
+     C                   SELECT                                                 -+                  
+      *                                                     !                                       
+      * 1). Devise sociÈtÈ FRF                              !                                       
+      *                                                     !                                       
+     C     £TYPE         WHENEQ    'F'                                           *                  
+      *                                                     !                                       
+     C                   MOVE      W1SDEV        ‡DEVI                           !                  
+     C                   MOVE      *ZEROS        ‡MTEU                           !                  
+     C                   MOVE      REDEBI        ‡MTDV                           !                  
+      *                                                     !                                       
+     C                   MOVEL     *DATE         ‡DAT1                           !                  
+      *                                                     !                                       
+     C                   MOVE      *ZEROS        ‡TAUX                           !                  
+     C                   EXSR      ‡CVTEU                                        !                  
+     C                   MOVEL     ‡MTEU         W1MTEU                          !                  
+     C                   MOVEL     ‡TAUX         W1TXEU                          !                  
+      *                                                     !                                       
+      * 2). Devise sociÈtÈ EUR                              !                                       
+      *                                                     !                                       
+     C     £TYPE         WHENEQ    'E'                                           *                  
+     C     £CALC         ANDEQ     *ON                                           !                  
+      *                                                     !                                       
+     C                   MOVE      'FRF'         ‡DEVI                           !                  
+     C                   MOVE      REDEBI        ‡MTEU                           !                  
+     C                   MOVE      *ZEROS        ‡MTDV                           !                  
+      *                                                     !                                       
+     C                   MOVEL     *DATE         ‡DAT1                           !                  
+      *                                                     !                                       
+     C                   MOVE      *ZEROS        ‡TAUX                           !                  
+     C                   EXSR      ‡CVTDV                                        !                  
+     C                   MOVEL     ‡MTDV         W1MTEU                          !                  
+     C                   MOVEL     ‡TAUX         W1TXEU                          !                  
+      *                                                     !                                       
+     C                   ENDSL                                                  -+                  
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * CrÈation ecritures de recettes.                                                             
+     OMVTJRE    EADD         AJREC                                                                  
+     O                                            2 'RE'                                            
+     O                       RESOCT               4                                                 
+     O                       REOPER               6                                                 
+     O                       £JOOD                9                                                 
+     O                       ECDACP              17                                                 
+     O                       ECDACP              25                                                 
+     O                       REDAEC              33                                                 
+     O                       *YEAR               37                                                 
+     O                       *MONTH              39                                                 
+     O                       *DAY                41                                                 
+     O                       ECCPT2              48                                                 
+     O                       ECSCP2              54                                                 
+     O                                           59 '00000'                                         
+     O                       MPIEC               66                                                 
+     O                       REDEBI              72P                                                
+     O                                           73 'R'                                             
+     O                       MLIB               103                                                 
+     O                       ECCPT1             110                                                 
+     O                                          117 '0000000'                                       
+     O                       £COPR              120                                                 
+     O                                          122 '1'                                             
+     O                                          123 'N'                                             
+     O                       REDEBI             129P                                                
+     O                       W1MTEU             159P                                                
+     O                       W1TXEU             165P                                                
+     O                       £REMI              172                                                 
+     O                                          173 'O'                                             
+     O                                          174 '0'                                             
+     O                       W1SDEV             177                                                 
+     O                       REREGL             179                                                 
+     O                       RESOCT             181                                                 
+     O                       £JOOD              184                                                 
+     O                       ECCLI1             188                                                 
+     O                       £DATE              196                                                 
+     O                       ECCPT1             203                                                 
+     O                       W1TAUX             209P                                                
+     O                       WZN112             215P                                                
+     O                       W1DTAP             223                                                 
+     O                       WZN005             228P                                                
+     O                       WZN112             234P                                                
+     O                       WZN005             239P                                                
+     O                       WZN112             245P                                                
+     O                       WZN005             250P                                                
+     O                       WZN112             256P                                                
+     O                       WZN005             261P                                                
+     O                       WZN112             267P                                                
+      * M‡J de AFCJO1LE                                                                             
+     OAFCJO1LE  E            £MCJPE                                                                 
+     O                       NP                 197P                                                
+      * M‡J de AFCJO1LA                                                                             
+     OAFCJO1LA  E            £MCJPA                                                                 
+     O                       NP                 197P                                                
+      * M‡J de AFCJO1LE                                                                             
+     OAFCJO1LE  E            £MCJLE                                                                 
+     O                       ECCLI1             213                                                 
+      * M‡J de AFCJO1LA                                                                             
+     OAFCJO1LA  E            £MCJLA                                                                 
+     O                       ECCLI1             213                                                 
+      * Edition de controle.                                                                        
+     OCR7150P   H    32                     1  1                                                    
+     O         OR    OA                                                                             
+     O                       TL1(1)              66                                                 
+     O                       TL1(1)             132                                                 
+     O          H    32                     1                                                       
+     O         OR    OA                                                                             
+     O                       RESOCT               2                                                 
+     O                       ZCLSOC              18                                                 
+     O                                           76 'CTRL DES ECRITURES DE LA'                      
+     O                                           86 'REMISE N∞'                                     
+     O                       RENURE        Z     94                                                 
+     O                       *DAY               115                                                 
+     O                                          116 '/'                                             
+     O                       *MONTH             118                                                 
+     O                                          119 '/'                                             
+     O                       *YEAR              123                                                 
+     O                       W1TIME             132 '0 :  :  '                                      
+     O          H    32                     0                                                       
+     O         OR    OA                                                                             
+     O                       TABTIT              58                                                 
+     O                                           67 'Banque:'                                       
+     O                       NOMBQE              83                                                 
+     O          H    OA                     1                                                       
+     O         OR    32                                                                             
+     O                       TABTIT              58                                                 
+     O          H    OA                     3                                                       
+     O         OR    32                                                                             
+     O                       TL1(1)              66                                                 
+     O                       TL1(2)             132                                                 
+     O                                            9 'CR715ENC '                                     
+     O                       PAGE          Z    132                                                 
+     O          H    OA                     1                                                       
+     O         OR    32                                                                             
+     O                                           17 'EchÈance/Dt.compt'                             
+     O                                           35 'Compte   DÈbit'                                
+     O                                           54 'Compte  CrÈdit'                                
+     O                                           66 'Lettrage'                                      
+     O                                           75 'N∞ PiËce'                                      
+     O                                           80 'Jrn'                                           
+     O                                           98 'LibellÈ Ècriture'                              
+     O                                          112 'Dt Valeur'                                     
+     O                                          131 'Montant'                                       
+     O          D   N29 33                  1                                                       
+     O                       MDECH                8                                                 
+     O                       REECJJ              11                                                 
+     O                                           12 '/'                                             
+     O                       REECMM              14                                                 
+     O                                           15 '/'                                             
+     O                       REECAA              19                                                 
+     O                       ECCPT1              28                                                 
+     O                       ECCPT2              46                                                 
+     O                                           48 '/'                                             
+     O                       ECSCP2              55                                                 
+     O                       RENUEF              65                                                 
+     O                       MPIEC               75                                                 
+     O                       £JOOD               80                                                 
+     O                       £LIB               102                                                 
+     O                       £JO                104                                                 
+     O                                          105 '/'                                             
+     O                       £MO                107                                                 
+     O                                          108 '/'                                             
+     O                       £AN                112                                                 
+     O                       REDEBI        3    132                                                 
+     O          D    29 33                  0                                                       
+     O                       MDECH                8                                                 
+     O                       REECJJ              11                                                 
+     O                                           12 '/'                                             
+     O                       REECMM              14                                                 
+     O                                           15 '/'                                             
+     O                       REECAA              19                                                 
+     O                       ECCPT1              28                                                 
+     O                       ECCPT2              46                                                 
+     O                                           48 '/'                                             
+     O                       ECSCP2              55                                                 
+     O                       RENUEF              65                                                 
+     O                       MPIEC               75                                                 
+     O                       £JOOD               80                                                 
+     O                                          105 'Inexistant Table 09L&03L'                      
+     O                                          120 '-Ec Non GÈnÈrÈe'                               
+     O                       REDEBI        3    132                                                 
+     O          D    29 33                  1                                                       
+     O                                          105 'Inexistant Table 09L&03L'                      
+     O                                          120 '-Ec Non GÈnÈrÈe'                               
+      * Tables des titres suivant type de remise.                                                   
+**       TITRES       **                                                                            
+1REMISE A L'ESCOMPTE DE L.C.R.                                                                      
+2REMISE A L'ESCOMPTE EN VALEUR                                                                      
+3REMISE A L'ENCAISSEMENT                                                                            
+4REMISE A L'ENCAISSEMENT CREDIT APRES EXPIRATION RETOUR                                             
+5REMISE A L'ENCAISSEMENT EN VALEUR                                                                  
+6                                                                                                   
+** TL1                                                                                              
+__________________________________________________________________                                  
+_______________________________________________________ Page                                        
+**                                                                                                  
+REMISE ESCOMPTE DE LCR N∞12345                                                                      
+REMISE ESCOMPTE VALEUR N∞12345                                                                      
+REMISE ENCAISSEMENT.F  N∞12345                                                                      
+REMISE ENCAISSEMENT.RI N∞12345                                                                      
+JOURNAL CREER GESTION EFFETS                                                                        
+REMISE RECETTE                                                                                      
+**                                                                                                  
+0131                                                                                                
+0228                                                                                                
+0331                                                                                                
+0430                                                                                                
+0531                                                                                                
+0630                                                                                                
+0731                                                                                                
+0831                                                                                                
+0930                                                                                                
+1031                                                                                                
+1130                                                                                                
+1231                                                                                                

@@ -1,0 +1,700 @@
+      *=========================================================================                    
+      *                                                                                             
+      *   Gestion du Plan comptable.                                                                
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  DÈtail des indicateurs utilisÈs.                                                           
+      *                                                                                             
+      *    *IN01 _  Aide.                                                                           
+      *    *IN02 _  Touche de fonction incorrecte.                                                  
+      *    *IN03 _  Exit.                                                                           
+      *    *IN04 _  Invite.                                                                         
+      *    *IN05 _  RÈafficher.                                                                     
+      *    *IN06 _  CrÈer.                                                                          
+      *    *IN12 _  Annuler.                                                                        
+      *    *IN15 _  Options d'Èdition.                                                              
+      *    *IN21 _  QUSCMDLN.                                                                       
+      *    *IN22 _  DSPOBJD.                                                                        
+      *    *IN25 _  SFLDSP, SFLDSPCTL                                                               
+      *    *IN26 _  Protection SFLDSP.                                                              
+      *    *IN27 _  SFLEND.                                                                         
+      *    *IN28 _  ROLLUP.                                                                         
+      *    *IN29 _  ROLLDOWN.                                                                       
+      *    *IN30 _  SFLNXTCHG.                                                                      
+      *    *IN31 _  Erreur zone option.                                                             
+      *    *IN45 _  SFLDSP, SFLDSPCTL                                                               
+      *    *IN47 _  SFLEND.                                                                         
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  Constitution des variables:                                                                
+      *                                                                                             
+      *     VAR   _  Variable fichier.                                                              
+      *    ‡VAR   _  Variable paramËtre.                                                            
+      *    $VAR   _  Variable Ècran.                                                                
+      *    £VAR   _  Variable programme.                                                            
+      *                                                                                             
+      *=========================================================================                    
+     H DATEDIT(*DMY)                                                                                
+      *                                                                                             
+      * Plan comptable.                                                                             
+      *                                                                                             
+     FAFGLI04L  IF   E           K DISK                                                             
+      *                                                                                             
+      * Grand livre.                                                                                
+      *                                                                                             
+     FAFGLI01L  IF   E           K DISK                                                             
+     F                                     RENAME(AFGLIF01:AFGLI01)                                 
+      *                                                                                             
+      * Messages.                                                                                   
+      *                                                                                             
+     FAFMSG02L  IF   E           K DISK                                                             
+      *                                                                                             
+      * DSPF.                                                                                       
+      *                                                                                             
+     FCP4040FM  CF   E             WORKSTN INFDS(INFO)                                              
+     F                                     SFILE(SF:$RANG)                                          
+      *                                                                                             
+      *=========================================================================                    
+     D MSG             S             79    DIM(1) CTDATA PERRCD(1)                                  
+      *=========================================================================                    
+      *                                                                                             
+     D QDSPGM         SDS                                                                           
+     D  £PRG                   1     10                                                             
+     D  £JOB                 244    253                                                             
+     D  £USRX                254    263                                                             
+     D  £PARM            *PARMS                                                                     
+      *                                                                                             
+     D INFO            DS                                                                           
+     D  £XY                  370    371B 0                                                          
+     D  £DEF                 378    379B 0                                                          
+      *                                                                                             
+     D                 DS                                                                           
+     D  £IMSG                  1     79                                                             
+     D  £SMSG                  9     12                                                             
+      *                                                                                             
+     D                 DS                                                                           
+     D  £DTEND                 1      8                                                             
+     D  £JOU1                  1      2                                                             
+     D  £MOI1                  3      4                                                             
+     D  £ANN1                  5      8                                                             
+      *                                                                                             
+     D                 DS                                                                           
+     D  £DTENV                 1      8                                                             
+     D  £ANN2                  1      4                                                             
+     D  £MOI2                  5      6                                                             
+     D  £JOU2                  7      8                                                             
+      *                                                                                             
+     D                UDS                                                                           
+     D  ZCCSOC               350    351                                                             
+      *                                                                                             
+      *=========================================================================                    
+      * TRAITEMENT.                                                                                 
+      *=========================================================================                    
+      *                                                                                             
+      * Gestion zone message.                                                                       
+      *                                                                                             
+     C                   EXSR      ‡MSG                                                             
+     C                   MOVEL     £IMSG         $M                                                 
+      *                                                                                             
+      * Affichage du sous-fichier.                                                                  
+      *                                                                                             
+     C                   WRITE     BA                                                               
+     C                   WRITE     VD                                                               
+     C                   EXFMT     CT                                                               
+      *                                                                                             
+      * Positionnement sur la page en cours.                                                        
+      *                                                                                             
+     C                   Z-ADD     £DEF          $RANG                                              
+     C                   Z-ADD     £DEF          £DEF2             4 0                              
+      *                                                                                             
+      * Traitement touches de fonction, touche ENTREE.                                              
+      *                                                                                             
+     C                   SELECT                                                 -+                  
+      *                                                     !                                       
+      * F1=Aide.                                            !                                       
+      *                                                     !                                       
+     C     *IN01         WHENEQ    *ON                                           !                  
+     C                   CALL      'AFHELP'                                      !                  
+     C                   PARM                    £PRG                            !                  
+     C                   PARM      'C1'          £FMT              2             !                  
+      *                                                     !                                       
+      * Touche de fonction incorrecte.                      !                                       
+      *                                                     !                                       
+     C     *IN02         WHENEQ    *ON                                           !                  
+     C                   Z-ADD     2             £MSG                            !                  
+      *                                                     !                                       
+      * F3=Exit.                                            !                                       
+      *                                                     !                                       
+     C     *IN03         WHENEQ    *ON                                           !                  
+     C                   SETON                                        LR         !                  
+      *                                                     !                                       
+      * F5=RÈafficher.                                      !                                       
+      *                                                     !                                       
+     C     *IN05         WHENEQ    *ON                                           !                  
+     C                   EXSR      ‡F5                                           !                  
+      *                                                     !                                       
+      * F15=Options d'Èdition.                              !                                       
+      *                                                     !                                       
+     C     *IN15         WHENEQ    *ON                                           !                  
+     C                   EXSR      ‡F15                                          !                  
+      *                                                     !                                       
+      * F21=QUSCMDLN                                        !                                       
+      *                                                     !                                       
+     C     *IN21         WHENEQ    *ON                                           !                  
+     C                   CALL      'QUSCMDLN'                                    !                  
+      *                                                     !                                       
+      * F22=DSPOBJD.                                        !                                       
+      *                                                     !                                       
+     C     *IN22         WHENEQ    *ON                                           !                  
+     C                   CALL      'AFRENSPG'                                    !                  
+     C                   PARM                    QDSPGM                          !                  
+      *                                                     !                                       
+      * F24=Autres touches.                                 !                                       
+      *                                                     !                                       
+     C     *IN24         WHENEQ    *ON                                           !                  
+      *                                                     !                                       
+      * ROLLUP.                                             !                                       
+      *                                                     !                                       
+     C     *IN28         WHENEQ    *ON                                           !                  
+     C                   EXSR      ‡F28                                          !                  
+      *                                                     !                                       
+      * ROLLDOWN                                            !                                       
+      *                                                     !                                       
+     C     *IN29         WHENEQ    *ON                                           !                  
+     C                   EXSR      ‡F29                                          !                  
+      *                                                     !                                       
+      * Sinon contrÙle des saisies.                         !                                       
+      *                                                     !                                       
+     C                   OTHER                                                   *                  
+     C                   EXSR      ‡ENTER                                        !                  
+     C                   ENDSL                                                  -+                  
+      *                                                                                             
+      *=========================================================================                    
+      * *INZSR: initialisation.                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     *INZSR        BEGSR                                                                      
+      *                                                                                             
+      * RÈception des paramËtres.                                                                   
+      *                                                                                             
+     C     *ENTRY        PLIST                                                                      
+     C                   PARM                    ‡‡SOC             2            SociÈtÈ             
+     C                   PARM                    ‡MTPR             1                                
+     C                   PARM                    ‡MONT            11                                
+     C                   PARM                    ‡SENS             1                                
+     C                   PARM                    ‡‡RET             1            Retour              
+      *                                                                                             
+      * Description de la clÈ de AFGLI04L.                                                          
+      *                                                                                             
+     C     £KGLI4        KLIST                                                                      
+     C                   KFLD                    ‡SOC              2                                
+     C                   KFLD                    £DEB             11 2                              
+     C                   KFLD                    £CRE             11 2                              
+      *                                                                                             
+      * Description de la clÈ de AFGLI01L                                                           
+      *                                                                                             
+     C     KGLI01        KLIST                                                                      
+     C                   KFLD                    ‡SOC                           =SociÈtÈ.           
+     C                   KFLD                    £PERI             6                        ptabl   
+     C                   KFLD                    £NECR             5 0          =N∞ ecriture        
+     C                   KFLD                    £RECR             5 0          =Rang Ècriture.     
+      *                                                                                             
+      * Description de la clÈ de AFMSG02L.                                                          
+      *                                                                                             
+     C     £KMSG         KLIST                                                                      
+     C                   KFLD                    £FIL             10                                
+     C                   KFLD                    £MSG              4 0                              
+      *                                                                                             
+      * Initialisation de la clÈ de AFMSG02L.                                                       
+      *                                                                                             
+     C                   MOVE      *BLANK        £FIL                                               
+     C                   MOVEL     'CP1000  '    £FIL                                               
+     C                   MOVE      '  '          £FIL                                               
+     C                   Z-ADD     *ZERO         £MSG                                               
+      *                                                                                             
+      * SociÈtÈ.                                                                                    
+      *                                                                                             
+     C     £PARM         IFGE      1                                            -+                  
+     C                   MOVEL     ‡‡SOC         ‡SOC                            !                  
+     C                   ELSE                                                    *                  
+     C                   MOVEL     ZCCSOC        ‡SOC                            !                  
+     C                   END                                                    -+                  
+      *                                                                                             
+      * Chargement des zones.                                                                       
+      *                                                                                             
+     C     £PARM         IFGE      2                                            -+                  
+     C                   MOVE      ‡MTPR         $MTPR                           !                  
+     C                   END                                                    -+                  
+     C     £PARM         IFGE      3                                            -+                  
+     C                   MOVE      ‡MONT         $MONT                           !                  
+     C                   END                                                    -+                  
+     C     £PARM         IFGE      4                                            -+                  
+     C                   MOVE      ‡SENS         $SENS                           !                  
+     C                   END                                                    -+                  
+     C     £PARM         IFGE      5                                            -+                  
+     C                   MOVE      *ON           ‡‡RET                           !                  
+     C                   END                                                    -+                  
+      *                                                                                             
+      * Conversion date du jour.                                                                    
+      *                                                                                             
+     C                   MOVEL     *DATE         £UDATE                                             
+      *                                                                                             
+      * Extraction pÈriode comptable.                                                               
+      *                                                                                             
+     C                   CALL      'CL1013C'                                                        
+     C                   PARM                    ‡SOC                                               
+     C                   PARM                    ‡DEB              6                                
+     C                   PARM                    ‡FIN              6                                
+     C                   PARM      *OFF          ‡RET2             1                                
+     C     ‡RET2         IFEQ      *OFF                                                             
+     C                   MOVEL     ‡DEB          $EXER                                              
+     C                   MOVE      '/       '    $EXER                                              
+     C                   MOVE      ‡FIN          $EXER                                              
+     C                   ELSE                                                                       
+     C                   MOVEL     '????????'    $EXER                                              
+     C                   END                                                                        
+      *                                                                                             
+      * PrÈparation du sous fichier.                                                                
+      *                                                                                             
+     C                   EXSR      ‡RECH                                                            
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡MSG: extraction d'un message.                                                              
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡MSG          BEGSR                                                                      
+     C     £MSG          IFEQ      *ZERO                                        -+                  
+     C                   Z-ADD     1             £MSG                            !                  
+     C                   END                                                    -+                  
+     C     £KMSG         CHAIN     AFMSG02L                           50                            
+     C     *IN50         IFEQ      *OFF                                         -+                  
+     C                   MOVE      INTMSG        £IMSG                           !                  
+     C                   ELSE                                                    *                  
+     C                   MOVE      MSG(1)        £IMSG                           !                  
+     C                   MOVE      £MSG          £SMSG                           !                  
+     C                   END                                                    -+                  
+     C                   Z-ADD     *ZERO         £MSG                                               
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡INIT: Initialisation du sous-fichier.                                                      
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡INIT         BEGSR                                                                      
+      *                                                                                             
+      * Effacement du sous-fichier.                                                                 
+      *                                                                                             
+     C                   SETON                                        25                            
+     C                   WRITE     CT                                                               
+     C                   SETOFF                                       252627                        
+      *                                                                                             
+      * Initialisation variable pour valeur dernier numÈro de rang.                                 
+      *                                                                                             
+     C                   Z-ADD     *ZERO         £EOSF             4 0                              
+      *                                                                                             
+      * Emplissage de la premiËre page.                                                             
+      *                                                                                             
+     C                   Z-ADD     $MONT         £MONTS           11 2                              
+     C                   EXSR      ‡ROLL                                                            
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡ROLL: Emplissage d'une page.                                                               
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡ROLL         BEGSR                                                                      
+      *                                                                                             
+      * Initialisation du numÈro de rang.                                                           
+      *                                                                                             
+     C                   Z-ADD     £EOSF         $RANG                                              
+      *                                                                                             
+      * Positionnement dans le fichier.                                                             
+      *                                                                                             
+     C     $SENS         IFEQ      'D'                                          -+                  
+     C                   Z-ADD     £MONTS        £DEB                            !                  
+     C                   Z-ADD     *ZEROS        £CRE                            !                  
+     C                   ELSE                                                   -+                  
+     C                   Z-ADD     £MONTS        £CRE                            !                  
+     C                   Z-ADD     *ZEROS        £DEB                            !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     £SETLL        IFEQ      *ON                                          --+                 
+     C     £KGLI4        SETLL     AFGLI04L                                       !                 
+     C                   MOVE      *OFF          £SETLL                           !                 
+     C                   END                                                    --+                 
+      *                                                                                             
+      * Initialisation des indicateurs.                                                             
+      *                                                                                             
+     C                   MOVEA     *OFF          *IN(30)                                            
+      *                                                                                             
+     C     £MONTS        IFEQ      *ZEROS                                                           
+     C                   MOVE      *ON           *IN81                                              
+     C                   ELSE                                                                       
+     C                   MOVE      *OFF          *IN81                                              
+     C                   ENDIF                                                                      
+      *                                                                                             
+      * Initialisation zone option.                                                                 
+      *                                                                                             
+     C                   MOVE      *BLANK        $OPT                                               
+      *                                                                                             
+      * Emplissage d'une page du sous-fichier.                                                      
+      *                                                                                             
+     C                   Z-ADD     *ZERO         £DO               2 0                              
+     C     £DO           DOWLT     9                                            ---+                
+      *                                                       !                                     
+      * Lecture.                                              !                                     
+      *                                                       !                                     
+     C                   READ      AFGLI04L                               27       !                
+      *                                                       !                                     
+      * Rupture.                                              !                                     
+      *                                                       !                                     
+     C                   EXSR      ‡RUPT                                           !                
+      *                                                       !                                     
+      * Ecriture.                                             !                                     
+      *                                                       !                                     
+     C     *IN27         IFEQ      *OFF                                         --+!                
+      *                                                      !!                                     
+      * MÈmorisation des zones clÈs.                         !!                                     
+      *                                                      !!                                     
+     C     GLMTDT        SUB       GLMTCT        £MONTS           11 2            !!                
+      *                                                      !!                                     
+      * Ecriture de l'enregistrement.                        !!                                     
+      *                                                      !!                                     
+     C     £WRITE        IFEQ      *OFF                                         -+!!                
+     C                   ADD       1             £DO                             !!!                
+     C                   ADD       1             $RANG                           !!!                
+     C                   EXSR      ‡LOAD                                         !!!                
+     C                   WRITE     SF                                            !!!                
+     C                   END                                                    -+!!                
+     C                   END                                                    --+!                
+     C                   END                                                    ---+                
+      *                                                                                             
+      * Lecture d'avance pour conditionnement SFLEND.                                               
+      *                                                                                             
+     C     *IN27         IFEQ      *OFF                                         ---+                
+     C                   MOVE      *ON           £WRITE                            !                
+     C     *IN27         DOWEQ     *OFF                                         --+!                
+     C     £WRITE        ANDEQ     *ON                                            !!                
+     C                   READ      AFGLI04L                               27      !!                
+     C     *IN27         IFEQ      *OFF                                         -+!!                
+     C                   EXSR      ‡RUPT                                         !!!                
+     C                   END                                                    -+!!                
+     C                   READP     AFGLI04L                               27      !!                
+     C                   END                                                    --+!                
+     C                   END                                                    ---+                
+      *                                                                                             
+      * MÈmorisation du dernier numÈro de rang.                                                     
+      *                                                                                             
+     C                   Z-ADD     $RANG         £EOSF                                              
+      *                                                                                             
+      * Protection affichage du sous-fichier.                                                       
+      *                                                                                             
+     C     $RANG         COMP      *ZERO                                  26                        
+      *                                                                                             
+      * Positionnement curseur sur la premiËre ligne.                                               
+      *                                                                                             
+     C     £EOSF         DIV       9             £REST             4 0                              
+     C                   MVR                     £REST                                              
+     C     9             SUB       £REST         £REST                                              
+     C                   SUB       8             £REST                                              
+     C     £REST         IFGT      *ZERO                                        -+                  
+     C                   SUB       8             $RANG                           !                  
+     C                   ELSE                                                    *                  
+     C                   ADD       £REST         $RANG                           !                  
+     C                   END                                                    -+                  
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡RUPT:                                                                                      
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡RUPT         BEGSR                                                                      
+     C                   MOVE      *OFF          £WRITE            1                                
+     C     GLCSOC        IFNE      ‡SOC                                         -+                  
+     C                   SETON                                        27         !                  
+     C                   END                                                    -+                  
+     C     $MTPR         IFEQ      'O'                                          -+                  
+     C     GLMTDT        IFNE      $MONT                                         !                  
+     C     GLMTCT        ANDNE     $MONT                                         !                  
+     C                   SETON                                        27         !                  
+     C                   END                                                     !                  
+     C                   END                                                    -+                  
+     C     *IN27         IFEQ      *ON                                          -+                  
+     C                   Z-ADD     *HIVAL        £DO                             !                  
+     C                   END                                                    -+                  
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡LOAD: chargement ligne sous-fichier.                                                       
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡LOAD         BEGSR                                                                      
+     C     GLMTDT        SUB       GLMTCT        $MTSF                                              
+     C                   MOVEL     GLDTCP        £DTENV                                             
+     C                   EXSR      ‡CVTE                                                            
+     C                   MOVEL     £DTEND        £DTSF                                              
+     C                   MOVEL     GLLIBL        $LISF                                              
+     C                   MOVEL     GLNECR        £NECRS                                             
+     C                   MOVEL     £DTEND        £DTCPS                                             
+     C                   MOVEL     GLRECR        £RECRS                                             
+     C                   MOVEL     GLDTCP        £PERIS                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡ENTER: ContrÙle des saisies.                                                               
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡ENTER        BEGSR                                                                      
+      *                                                                                             
+     C                   MOVEA     *OFF          *IN(60)                                            
+      *                                                                                             
+     C                   SELECT                                                 --+                 
+      *                                                      !                                      
+      * Recherche.                                           !                                      
+      *                                                      !                                      
+     C     $MTPR         WHENNE    £MTP2                                          !                 
+     C     $MONT         ORNE      £MON2                                          !                 
+     C     $SENS         ORNE      £SEN2                                          !                 
+     C                   EXSR      ‡RECH                                          !                 
+      *                                                      !                                      
+      * ContrÙle sous fichier.                               !                                      
+      *                                                      !                                      
+     C                   OTHER                                                    *                 
+     C     *IN26         COMP      *ON                                    LR      !                 
+     C     *INLR         IFEQ      *OFF                                         -+!                 
+     C                   READC     SF                                     LR     !!                 
+     C                   END                                                    -+!                 
+     C     *INLR         IFEQ      *OFF                                         -+!                 
+     C                   SETOFF                                       50         !!                 
+     C                   EXSR      ‡SFL                                          !!                 
+     C                   END                                                    -+!                 
+     C     *INLR         IFEQ      *ON                                          -+!                 
+     C     £PARM         ANDGE     5                                             !!                 
+     C                   MOVE      *OFF          ‡‡RET                           !!                 
+     C                   END                                                    -+!                 
+     C                   END                                                    --+                 
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡RECH: recherche.                                                                           
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡RECH         BEGSR                                                                      
+      *                                                                                             
+     C                   MOVE      *ON           £SETLL            1                                
+      *                                                                                             
+      * MTPR.                                                                                       
+      *                                                                                             
+     C     $MTPR         IFNE      'O'                                                              
+     C     $MTPR         ANDNE     'N'                                                              
+     C                   MOVEL     'N'           $MTPR                                              
+     C                   ENDIF                                                                      
+     C                   MOVE      $MTPR         £MTP2             1                                
+      *                                                                                             
+      * SENS.                                                                                       
+      *                                                                                             
+     C     $SENS         IFNE      'D'                                                              
+     C     $SENS         ANDNE     'C'                                                              
+     C                   MOVEL     'D'           $SENS                                              
+     C                   ENDIF                                                                      
+     C                   MOVE      $SENS         £SEN2             1                                
+      *                                                                                             
+      * $MONT                                                                                       
+      *                                                                                             
+     C                   Z-ADD     $MONT         £MON2            11 2                              
+      *                                                                                             
+     C                   EXSR      ‡INIT                                                            
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡SFL: ContrÙle des saisies sous-fichier.                                                    
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡SFL          BEGSR                                                                      
+      *                                                                                             
+      * Initialisation code retour.                                                                 
+      *                                                                                             
+     C                   MOVE      *OFF          ‡RET              1                                
+      *                                                                                             
+      * Initialisation variable pour rÈaffichage.                                                   
+      *                                                                                             
+     C                   Z-ADD     *ZERO         £REAF             4 0                              
+      *                                                                                             
+      * Tant qu'il y a des enregistrements modifiÈs.                                                
+      *                                                                                             
+     C     *IN50         DOWEQ     *OFF                                         ---+                
+      *                                                       !                                     
+      * Formatage zone option.                                !                                     
+      *                                                       !                                     
+     C     $OPT          IFNE      *BLANK                                       --+!                
+     C                   MOVEL     $OPT          £OPTA             1              !!                
+     C                   MOVE      $OPT          £OPTB             1              !!                
+     C     £OPTB         IFEQ      *BLANK                                       -+!!                
+     C                   MOVE      *BLANK        $OPT                            !!!                
+     C                   MOVE      £OPTA         $OPT                            !!!                
+     C                   END                                                    -+!!                
+     C                   END                                                    --+!                
+      *                                                       !                                     
+      * ContÙle existence de l'enregistrement.                !                                     
+      *                                                       !                                     
+     C                   MOVEL     £PERIS        £PERI                             !                
+     C                   MOVEL     £NECRS        £NECR                             !                
+     C                   MOVEL     £RECRS        £RECR                             !                
+     C     KGLI01        CHAIN     AFGLI01L                           50           !                
+     C     *IN50         IFEQ      *ON                                          --+!                
+     C     £REAF         IFEQ      *ZERO                                        -+!!                
+     C                   Z-ADD     $RANG         £REAF                           !!!                
+     C                   Z-ADD     3             £MSG                            !!!                
+     C                   END                                                    -+!!                
+     C                   END                                                    --+!                
+      *                                                       !                                     
+      * Activation SFLNXTCHG.                                 !                                     
+      *                                                       !                                     
+     C                   SETON                                        30           !                
+      *                                                       !                                     
+      * Mise hors fonction indicateur zone option.            !                                     
+      *                                                       !                                     
+     C                   SETOFF                                       31           !                
+      *                                                       !                                     
+      * ContrÙle des options.                                 !                                     
+      *                                                       !                                     
+     C                   SELECT                                                 --+!                
+      *                                                      !!                                     
+      * Enregistrement non trouvÈ.                           !!                                     
+      *                                                      !!                                     
+     C     *IN50         WHENEQ    *ON                                            !!                
+     C                   SETON                                        31          !!                
+      *                                                      !!                                     
+      * *BLANK.                                              !!                                     
+      *                                                      !!                                     
+     C     $OPT          WHENEQ    *BLANK                                         !!                
+     C                   SETOFF                                       30          !!                
+      *                                                      !!                                     
+      * 5=Afficher.                                          !!                                     
+      *                                                      !!                                     
+     C     $OPT          WHENEQ    ' 5'                                           !!                
+     C                   EXSR      ‡OPT5                                          !!                
+      *                                                      !!                                     
+      * Option incorrecte.                                   !!                                     
+      *                                                      !!                                     
+     C                   OTHER                                                    *!                
+     C     £REAF         IFEQ      *ZERO                                        -+!!                
+     C                   Z-ADD     $RANG         £REAF                           !!!                
+     C                   Z-ADD     4             £MSG                            !!!                
+     C                   END                                                    -+!!                
+     C                   SETON                                        31          !!                
+     C                   ENDSL                                                  --+!                
+      *                                                       !                                     
+      * Mise ‡ jour du sous-fichier.                          !                                     
+      *                                                       !                                     
+     C                   MOVEL     £PERIS        £PERI                             !                
+     C                   MOVEL     £NECRS        £NECR                             !                
+     C                   MOVEL     £RECRS        £RECR                             !                
+     C     KGLI01        CHAIN     AFGLI01L                           50           !                
+     C     *IN50         IFEQ      *OFF                                         -+ !                
+     C                   EXSR      ‡LOAD                                         ! !                
+     C                   END                                                    -+ !                
+     C                   UPDATE    SF                                              !                
+      *                                                       !                                     
+      * Lecture de l'enregistrement modifiÈ suivant.          !                                     
+      *                                                       !                                     
+     C     ‡RET          COMP      *ON                                    50       !                
+     C  N50              READC     SF                                     50       !                
+     C                   END                                                    ---+                
+      *                                                                                             
+      * RÈaffichage sur la premiËre anomalie.                                                       
+      *                                                                                             
+     C     £REAF         IFGT      *ZERO                                        -+                  
+     C                   Z-ADD     £REAF         $RANG                           !                  
+     C                   END                                                    -+                  
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡OPT5:                                                                                      
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡OPT5         BEGSR                                                                      
+     C                   MOVEL     £NECRS        ‡NECR                                              
+     C                   MOVEL     £RECRS        ‡RECR                                              
+     C                   MOVEL     £PERIS        ‡PERI                                              
+     C                   CALL      'CP4099'                                                         
+     C                   PARM                    ‡SOC                                               
+     C                   PARM                    ‡PERI             6                                
+     C                   PARM                    ‡NECR             5                                
+     C                   PARM                    ‡RECR             5                                
+     C                   MOVE      *OFF          ‡RET                                               
+     C     ‡RET          IFEQ      *OFF                                         -+                  
+     C                   MOVE      *BLANK        $OPT                            !                  
+     C                   SETOFF                                       30         !                  
+     C                   END                                                    -+                  
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡F5: emplissage du sous fichier jusqu'‡ la page en cours.                                   
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡F5           BEGSR                                                                      
+     C                   Z-ADD     £DEF          £DEF2             4 0                              
+     C                   EXSR      ‡RECH                                                            
+     C     *IN26         IFEQ      *OFF                                         --+                 
+     C     £EOSF         DOWLT     £DEF2                                        -+!                 
+     C     *IN27         ANDEQ     *OFF                                          !!                 
+     C                   EXSR      ‡ROLL                                         !!                 
+     C                   END                                                    -+!                 
+     C                   END                                                    --+                 
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡F15:                                                                                       
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡F15          BEGSR                                                                      
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡F28:                                                                                       
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡F28          BEGSR                                                                      
+     C                   EXSR      ‡ROLL                                                            
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡F29:                                                                                       
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡F29          BEGSR                                                                      
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡CVTE: conversion de date.                                                                  
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡CVTE         BEGSR                                                                      
+     C                   MOVEL     £ANN2         £ANN1                                              
+     C                   MOVEL     £MOI2         £MOI1                                              
+     C                   MOVEL     £JOU2         £JOU1                                              
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡CVTV: conversion de date ‡ envers.                                                         
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡CVTV         BEGSR                                                                      
+     C                   MOVEL     £ANN1         £ANN2                                              
+     C                   MOVEL     £MOI1         £MOI2                                              
+     C                   MOVEL     £JOU1         £JOU2                                              
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+**                                                                                                  
+Message XXXX de type CP1000    non trouvÈ.                                                          

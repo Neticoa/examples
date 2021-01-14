@@ -1,0 +1,311 @@
+     HDATEDIT(*DMY)
+
+     FAFSOD01   IP   E           K DISK    RENAME(SODF:SOD01)
+
+       DCL-F AFSOD00 DISK(*EXT) USAGE(*INPUT) KEYED ;
+     FAFPCO01E  IF   F  236    15AIDISK    KEYLOC(1)
+
+     FAFPCO01A  IF   F  236    15AIDISK    KEYLOC(1)
+
+     FAFCJO1LA  UF   F  232     5AIDISK    KEYLOC(1)
+
+     FAFCJO1LE  UF   F  232     5AIDISK    KEYLOC(1)
+
+     FAFMVTJOR  O  A F  286        DISK    
+
+     FMAJCPT    IF   F    5     5AIDISK    KEYLOC(1)
+
+     IMAJCPT    NS                            
+
+     I          1    2  MASOCI                    
+
+     IAFPCO01E  NS                            
+
+     I         30   35 0PCPDEB                    
+
+     I         36   41 0PCPFIN                    
+
+     IAFPCO01A  NS                            
+
+     I         30   35 0PCPDEB                    
+
+     I         36   41 0PCPFIN                    
+
+     IAFCJO1LA  NS                            
+
+     I     P  150  197  NP                        
+
+     IAFCJO1LE  NS                            
+
+     I     P  150  197  NP                        
+
+     D WZON11          S             11  0                                      From conversion of result field
+     D £MAJCP          S              5                                         From conversion of result field
+     D W1CPT1          S              5  0                                      From conversion of result field
+     D W1CPT2          S              5  0                                      From conversion of result field
+     D W1CJOU          S              3                                         From conversion of result field
+     D £DEBI           S             11  2                                      From conversion of result field
+     D £CRDI           S             11  2                                      From conversion of result field
+     D £DEP            S              1                                         From conversion of result field
+     D W1DCPT          S              6                                         From conversion of result field
+     D W1REGR          S              1  0                                      From conversion of result field
+     D W1COCG          S              2  0                                      From conversion of result field
+
+     D KSOD00          DS                                                       From a KLIST
+     D MASOCI                                                                   From a KLIST KLFD
+     D £NFOL                                                                    From a KLIST KLFD
+     D £NLIG                                                                    From a KLIST KLFD
+     D W1AAMM          S              6  0                                      From conversion of result field
+     D £MM             S              2  0                                      From conversion of result field
+     D £AA             S              4  0                                      From conversion of result field
+     D WZA001          S              1  0                                      From conversion of result field
+     D WZA003          S              3  0                                      From conversion of result field
+     D ‡CTRL1          S              1                                         From conversion of result field
+       WZON11 = 0;
+       £MAJCP = SOCSTE;
+       EVALR £MAJCP = 'ORG';
+       CHAIN(N) £MAJCP MAJCPT ;
+       IF %FOUND = *OFF;
+          *IN99 = *ON;
+       ELSE;
+          *IN99 = *OFF;
+       ENDIF;
+       IF *IN99 = *OFF;
+          IFEQ *OFF                                      ---+                 
+ 
+             W1CPT1 += 1;
+             W1CPT2 = 0;
+             W1CJOU = SOCJOU;
+             EVALR ‡CTRL1 = *OFF;
+             £NFOL = SONFOL;
+             £NLIG = 1;
+             SETLL KSOD00 AFSOD00;
+             READ(N) AFSOD00;
+             IF %EOF = *ON;
+                *IN95 = *ON;
+             ELSE;
+                *IN95 = *OFF;
+             ENDIF;
+             DOW *IN95 = *OFF;
+                AND SOCSTE = MASOCI;
+                AND SONFOL = £NFOL;
+                £DEBI = SOMDEB;
+                £CRDI = SOMCRE;
+                IF SOCDEP <> *BLANKS;
+                   IFNE *BLANKS                                      -+!!                 
+ 
+                      £DEP = SOCDEP;
+                      £DEP = '';
+                   ENDIF;
+                   W1CPT2 += 1;
+                   W1DCPT = *BLANKS;
+                   IF SOLETT = '****';
+                      OR SOLETT = 'P***';
+                      IFEQ'****'                                     -+!!                 
+ C         SOLETT OREQ'P***'                                      !!!                 
+ 
+                         W1DCPT = SODCPT;
+                      ENDIF;
+                      IF *INU7 = *OFF;
+                         AND SOCJOU <> W1CJOU;
+                         AND SOLETR <> 'O';
+                         AND SOLETR <> 'N';
+                         IFEQ *OFF                                      -+!!                 
+ C         SOCJOU ANDNE W1CJOU                                       !!!                 
+ C         SOLETR ANDNE'O'                                      !!!                 
+ C         SOLETR ANDNE'N'                                      !!!                 
+ 
+                            EXSR ‡NPIE;
+                            EVALR ‡CTRL1 = *OFF;
+                         ENDIF;
+                         W1REGR = *ZEROS;
+                         W1COCG = SOCOCG;
+                         IF SOFIL3 = 'O';
+                            AND W1COCG = 51;
+                            IFEQ'O'                                     -+!!                 
+ C         W1COCG ANDEQ 51                                       !!!                 
+ 
+                               W1REGR = 1;
+                            ENDIF;
+                            EXCEPT £MJDA1;
+                            READ(N) AFSOD00;
+                            IF %EOF = *ON;
+                               *IN95 = *ON;
+                            ELSE;
+                               *IN95 = *OFF;
+                            ENDIF;
+                         ENDDO;
+                      ENDIF;
+       BEGSR *INZSR;
+       ENDSR ;
+       BEGSR ‡NPIE;
+       IF ‡CTRL1 = *OFF;
+          IFEQ *OFF                                      ---+                 
+ 
+             £SOCPC = SOCSTE;
+             £SOCCJ = SOCSTE;
+             £PER = *ZEROS;
+             W1AAMM = SODCPT;
+             CHAIN(N) KPCO01 AFPCO01E ;
+             IF %FOUND = *OFF;
+                *IN91 = *ON;
+             ELSE;
+                *IN91 = *OFF;
+             ENDIF;
+             IF *IN91 = *OFF;
+                AND W1AAMM >= PCPDEB;
+                AND W1AAMM <= PCPFIN;
+                IFEQ *OFF                                      -+ !                 
+ C         W1AAMM ANDGE PCPDEB                                       ! !                 
+ C         W1AAMM ANDLE PCPFIN                                       ! !                 
+ 
+                   EVALR *IN41 = *ON;
+                ENDIF;
+                CHAIN(N) KPCO01 AFPCO01A ;
+                IF %FOUND = *OFF;
+                   *IN91 = *ON;
+                ELSE;
+                   *IN91 = *OFF;
+                ENDIF;
+                IF *IN91 = *OFF;
+                   AND W1AAMM >= PCPDEB;
+                   AND W1AAMM <= PCPFIN;
+                   IFEQ *OFF                                      -+ !                 
+ C         W1AAMM ANDGE PCPDEB                                       ! !                 
+ C         W1AAMM ANDLE PCPFIN                                       ! !                 
+ 
+                      EVALR *IN41 = *OFF;
+                   ENDIF;
+                   EVALR £CJOU = SOCJOU;
+                   IF *IN41 = *ON;
+                      IFEQ *ON                                      -+ !                 
+ 
+                         CHAIN(N) KCJO01 AFCJO1LE ;
+                         IF %FOUND = *OFF;
+                            *IN91 = *ON;
+                         ELSE;
+                            *IN91 = *OFF;
+                         ENDIF;
+                         CHAIN(N) KCJO01 AFCJO1LA ;
+                         IF %FOUND = *OFF;
+                            *IN91 = *ON;
+                         ELSE;
+                            *IN91 = *OFF;
+                         ENDIF;
+                      ENDIF;
+                      IF *IN91 = *OFF;
+                         IFEQ *OFF                                      --+!                 
+ 
+                            £MM = W1AAMM;
+                            £AA = W1AAMM;
+                            IF NP(£MM) = *ZEROS;
+                               IFEQ *ZEROS                                      -+!!                 
+ 
+                                  EVALR WZA001 = £AA;
+                                  WZA003 = WZA001;
+                                  EVALR WZA003 = £MM;
+                                  NP(£MM) = WZA003;
+                               ENDIF;
+                               NP(£MM) += 1;
+                               SONPIE = NP(£MM);
+                               IF *IN41 = *ON;
+                                  IFEQ *ON                                      -+!!                 
+ 
+                                     EXCEPT £MCJOE;
+                                     EXCEPT £MCJOA;
+                                  ENDIF;
+                                  EVALR ‡CTRL1 = *ON;
+                               ENDIF;
+                               SONPIE = NP(£MM);
+                            ENDIF;
+                            ENDSR ;
+     OAFMVTJOR  EADD         £MJDA1                                             
+
+     O                                           2 'OD'
+
+     O                       SOCSTE              4 
+
+     O                                           6 'OR'
+
+     O                       SOCJOU              9 
+
+     O                       SODCPT             17 
+
+     O                       *YEAR              21 
+
+     O                       *MONTH             23 
+
+     O                       *DAY               25 
+
+     O                       SOCOCG             32 
+
+     O                       SOSCCG             38 
+
+     O                       SOCOMA             43 
+
+     O                       SONPIE             50 
+
+     O                       SONPIE             64 
+
+     O                       £DEBI          B   70P
+
+     O                       £CRDI          B   76P
+
+     O                       SOLETT             80 
+
+     O                       W1REGR             81 
+
+     O                       SOLIBE            112 
+
+     O                       SODPIE            120 
+
+     O                       SODECH            128 
+
+     O                                         129 '0'
+
+     O                                         137 '00000000'
+
+     O                       SOCREG            139 
+
+     O                                         142 '   '
+
+     O                       £NFOL             149 
+
+     O                       WZON11            155P
+
+     O                                         162 '0000000'
+
+     O                       £DEP              163 
+
+     O                       W1DCPT            175 
+
+     O                       W1CPT1            178P
+
+     O                       W1CPT2            181P
+
+     O                                         197 '   '
+
+     O                                         204 '0000000'
+
+     O                                         228 '                        '
+
+     O                                         238 '0000000000'
+
+     O                                         249 '           '
+
+     O                                         251 '00'
+
+     O                                         262 '           '
+
+     O                                         273 '00000000000'
+
+     O                                         286 '0000000000000'
+
+     OAFCJO1LE  E            £MCJOE                                             
+
+     O                       NP                197P
+
+     OAFCJO1LA  E            £MCJOA                                             
+
+     O                       NP                197P
+

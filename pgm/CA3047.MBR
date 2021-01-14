@@ -1,0 +1,875 @@
+      *=========================================================================                    
+      *                                                                                             
+      *  Détail des indicateurs utilisés.                                                           
+      *                                                                                             
+      *    *IN01 _  Aide.                                                                           
+      *    *IN02 _  Touche de fonction incorrecte.                                                  
+      *    *IN03 _  Exit.                                                                           
+      *    *IN04 _  Invite.                                                                         
+      *    *IN05 _  Réafficher.                                                                     
+      *    *IN12 _  Annuler.                                                                        
+      *    *IN21 _  QUSCMDLN.                                                                       
+      *    *IN22 _  DSPOBJD.                                                                        
+      *    *IN28 _  ROLLUP.                                                                         
+      *    *IN28 _  ROLLDOWN.                                                                       
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  Constitution des variables:                                                                
+      *                                                                                             
+      *     VAR   _  Variable fichier.                                                              
+      *    àVAR   _  Variable paramètre.                                                            
+      *    $VAR   _  Variable écran.                                                                
+      *    £VAR   _  Variable programme.                                                            
+      *                                                                                             
+      *=========================================================================                    
+     H DATEDIT(*YMD)                                                                                
+      *                                                                                             
+      * Fichier plan comptable général.                                                             
+      *                                                                                             
+     FPLANGE    IF   F  232    15AIDISK    KEYLOC(1)                            CP3045              
+     FPLANGP    IF   F  232    15AIDISK    KEYLOC(1)                            CP3045              
+     FPLG04E    IF   F  232    15AIDISK    KEYLOC(1)                            CP3045              
+     FPLG04A    IF   F  232    15AIDISK    KEYLOC(1)                            CP3045              
+      *                                                                                             
+      * Fichier des écritures.                                                                      
+      *                                                                                             
+     FMVTJOD    IPE  F  235     9AIDISK    KEYLOC(173)                          CP3045              
+      *                                                                                             
+      * Fichier société.                                                                            
+      *                                                                                             
+     FSOC01     IF   F  292     2AIDISK    KEYLOC(1)                            CP3045              
+      *                                                                                             
+      * Fichier plan comptable analytique.                                                          
+      *                                                                                             
+     FPLANAE    IF   F  232    14AIDISK    KEYLOC(1)                            CP3045              
+     FPLANAP    IF   F  232    14AIDISK    KEYLOC(1)                            CP3045              
+      *                                                                                             
+      * Fichier plan comptable ouverture.                                                           
+      *                                                                                             
+     FPLCOUE    IF   F  236    15AIDISK    KEYLOC(1)                            CP3045              
+     FPLCOUA    IF   F  236    15AIDISK    KEYLOC(1)                            CP3045              
+      *                                                                                             
+      * Fichier paramètres.                                                                         
+      *                                                                                             
+     FPARAME    IF   F  128    12AIDISK    KEYLOC(1)                            CP3045              
+     FPARAMA    IF   F  128    12AIDISK    KEYLOC(1)                            CP3045              
+      *                                                                                             
+      * Fichier des écritures.                                                                      
+      *                                                                                             
+     FAFMVTJOU  O  A F  602        DISK                                         CP3045              
+      *                                                                                             
+      * MàJ.                                                                                        
+      *                                                                                             
+     FMAJCPT    IF   F    5     5AIDISK    KEYLOC(1)                            CP3045              
+      *                                                                                             
+      * Fichier etat.                                                                               
+      *                                                                                             
+     FIMPR      O    F  198        PRINTER OFLIND(*INOA)                        CP3045              
+      *                                                                                             
+      *=========================================================================                    
+     D TMOITR          S              1  0 DIM(12)                                               CP3
+     D TB              S             66    DIM(18) CTDATA PERRCD(1)                              CP3
+     D TA              S             66    DIM(8) CTDATA PERRCD(1)                               CP3
+     D ERR             S              3  0 DIM(15)                                               CP3
+     D TL1             S             66    DIM(4) CTDATA PERRCD(1)                               CP3
+     D MSG             S             64    DIM(13) CTDATA PERRCD(1)                              CP3
+      *                                                                                             
+      * Clé PLANGXX.                                                                                
+      *                                                                                             
+     D                 DS                                                       CP3045              
+     D  DSPL01                 1      9                                         CP3045              
+     D  DSPL02                10     15                                         CP3045              
+     D  DSKPLG                 1     15                                         CP3045              
+      *                                                                                             
+      * Clé PLANAXX.                                                                                
+      *                                                                                             
+     D                 DS                                                       CP3045              
+     D  DSPLA1                 1      9                                         CP3045              
+     D  DSPLA2                10     14                                         CP3045              
+     D  DSKPLA                 1     14                                         CP3045              
+      *                                                                                             
+      * Clé PARAMXX.                                                                                
+      *                                                                                             
+     D                 DS                                                       CP3045              
+     D  DSPA01                 1      5                                         CP3045              
+     D  DSPA02                 6     12                                         CP3045              
+     D  DSKPAR                 1     12                                         CP3045              
+      *                                                                                             
+      * Clé PCOUVXX.                                                                                
+      *                                                                                             
+     D                 DS                                                       CP3045              
+     D  DSKPCL                 1     15  0                                      CP3045              
+      *                                                                                             
+     D ENREG           DS                                                       CP3047              
+     D  CODSOC                 3      4  0                                      CP3047              
+     D  REDACT                 5      6                                         CP3047              
+     D  CODJOU                 9     11                                         CP3047              
+     D  COCENT                12     12  0                                      CP3045              
+     D  DATCPT                16     23  0                                      CP3047              
+     D  DATPE1                24     31  0                                      CP3047              
+     D  DATEH1                32     39  0                                      CP3047              
+     D  NUMPI1                73     79  0                                      CP3047              
+     D  REFLE1                80     86  0                                      CP3047              
+     D  LIBEL1               100    129                                         CP3047              
+     D  ODDEVI               137    139                                                             
+     D  ODREGL               142    143                                         CP3047              
+     D  ENR                    1    150                                         CP3045              
+      *=========================================================================                    
+      *                                                                                             
+      * Plan comptable en cours.                                                                    
+      *                                                                                             
+     IPLANGE    NS                                                              CP3045              
+     I                                223  223  PGCPAN                          CP1010              
+      *                                                                                             
+      * Plan comptable ouverture en cours.                                                          
+      *                                                                                             
+     IPLCOUE    NS                                                              CP3045              
+     I                                 18   29  TMOITR                          CP3045              
+     I                                 30   35 0ANNEDB                          CP3045              
+     I                                 36   41 0ANNEFN                          CP3045              
+      *                                                                                             
+      * Plan comptable -1.                                                                          
+      *                                                                                             
+     IPLANGP    NS                                                              CP3045              
+     I                                223  223  PGCPAN                          CP1010              
+      *                                                                                             
+      * Plan comptable ouverture -1.                                                                
+      *                                                                                             
+     IPLCOUA    NS                                                              CP3045              
+     I                                 18   29  TMOITR                          CP3045              
+     I                                 30   35 0ANNEDB                          CP3045              
+     I                                 36   41 0ANNEFN                          CP3045              
+      *                                                                                             
+      * Plan comptable analytique en cours.                                                         
+      *                                                                                             
+     IPLANAE    NS                                                              CP3045              
+      *                                                                                             
+      * Plan comptable analytique -1.                                                               
+      *                                                                                             
+     IPLANAP    NS                                                              CP3045              
+      *                                                                                             
+      * Plan comptable centralisateur en cours.                                                     
+      *                                                                                             
+     IPLG04E    NS                                                              CP3045              
+      *                                                                                             
+      * Plan comptable centralisateur -1.                                                           
+      *                                                                                             
+     IPLG04A    NS                                                              CP3045              
+      *                                                                                             
+      * Paramètres en cours.                                                                        
+      *                                                                                             
+     IPARAME    NS                                                              CP3045              
+      *                                                                                             
+      * Paramètres -1.                                                                              
+      *                                                                                             
+     IPARAMA    NS                                                              CP3045              
+      *                                                                                             
+     IMVTJOD    NS  01    1 CO    2 CD                                          CP3047              
+     I                                  3    4 0CODSOC        L3                CP3047              
+     I                                  5    6  REDACT                          CP3047              
+     I                                  7    9  CODJOU                          CP3047              
+     I                                 10   17 0DATCPT                          CP3047              
+     I                                 10   13 0AACPT                           CP3047              
+     I                                 14   15 0MMCPT                           CP3047              
+     I                                 16   17 0JJCPT                           CP3047              
+     I                                 26   32 0CPTGE1                          CP3047              
+     I                                 33   38 0SCPGE1                          CP3047              
+     I                                 26   38 0COMPT1                                              
+     I                                 39   43 0CPTAN3                          CP3047              
+     I                                 44   50 0REFLE1                          CP3047              
+     I                                 51   57 0NUMPI1                          CP3047              
+     I                             P   58   63 2MTDEB1                  97      CP3047              
+     I                             P   64   69 2MTCRD1                          CP3047              
+     I                             P   70   75 2MTDEBD                          CP3047              
+     I                             P   76   81 2MTCRDD                          CP3047              
+     I                             P   82   87 6REPARI              96          CP3047              
+     I                                 88  117  LIBEL1                          CP3047              
+     I                                118  125 0DATPE1                          CP3047              
+     I                                118  121 0AAPI1                           CP3047              
+     I                                122  123 0MMPI1                           CP3047              
+     I                                124  125 0JJPI1                           CP3047              
+     I                                126  133 0DATEH1                          CP3047              
+     I                                126  129 0AAEH1                           CP3047              
+     I                                130  131 0MMEH1                           CP3047              
+     I                                132  133 0JJEH1                           CP3047              
+     I                                135  142 0ODDVAL                          CP3047              
+     I                                143  144  ODREGL                          CP3047              
+     I                                145  147  ODDEVI                                              
+     I                                154  160 0ODBANQ                          CP3047              
+     I                                172  172  ODBOAP                          CP3047              
+     I                                175  177  ODJOUR                          CP3047              
+     I                                178  181  ODLIGN                          CP3047              
+     I                             P  182  187 2MTDEUR                          CP3047              
+     I                             P  188  193 2MTCEUR                          CP3047              
+     I                             P  194  199 6REPEUR              95          CP3047              
+      *                                                                                             
+     ISOC01     NS                                                              CP3045              
+     I                                  1    2 0SOSOCI                          CP3045              
+     I                                  3   26  SOLIBE                          CP3045              
+     I                                289  291  SOCDEV                          CP3045              
+      *                                                                                             
+      * MàJ                                                                                         
+      *                                                                                             
+     IMAJCPT    NS                                                              CP3045              
+      *                                                                                             
+      *=========================================================================                    
+      * Rupture L3(Société).                                                                        
+      *=========================================================================                    
+      *                                                                                             
+     C     *INL3         IFEQ      *ON                                          -+                  
+      *                                                     !                                       
+     C                   MOVEL     CODSOC        £MAJCP            5             !                  
+     C                   MOVE      'ACH'         £MAJCP                          !                  
+     C     £MAJCP        CHAIN     MAJCPT                             98         !                  
+      *                                                     !                                       
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Controle si société concernée.                                                              
+      *                                                                                             
+     C   98              SETOFF                                       01                            
+     C   98              GOTO      FINI                                                             
+      *                                                                                             
+      *=========================================================================                    
+      * Rupture L3(Société).                                                                        
+      *=========================================================================                    
+      *                                                                                             
+     C     *INL3         IFEQ      *ON                                          --+                 
+      *                                                      !                                      
+     C                   Z-ADD     *ZEROS        ££DEBI           13 2            !                 
+     C                   Z-ADD     *ZEROS        ££CRDI           13 2            !                 
+     C                   MOVEL     CODSOC        £SOCN             2 0            !                 
+     C     £SOCN         CHAIN     SOC01                              82          !                 
+      *                                                      !                                      
+     C     *IN82         IFEQ      *OFF                                         -+!                 
+     C                   MOVEL     SOSOCI        W1CSOC            2             !!                 
+     C                   MOVEL     SOLIBE        W1LSOC           15             !!                 
+     C                   MOVEL     SOCDEV        W1SDEV            3             !!                 
+     C                   ELSE                                                    *!                 
+     C                   MOVE      *BLANK        W1LSOC                          !!                 
+     C                   MOVE      '        '    W1LSOC                          !!                 
+     C                   MOVEL     'FRF'         W1SDEV                          !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   ENDIF                                                  --+                 
+      *                                                                                             
+     C                   Z-ADD     0             ERR                                                
+     C                   Z-ADD     0             X                 1 0                              
+     C                   Z-ADD     0             J                 2 0                              
+     C                   MOVEA     '000000'      *IN(11)                                            
+     C                   SETOFF                                       312530                        
+     C                   SETOFF                                       404194                        
+     C                   SETOFF                                       459910                        
+     C                   SETOFF                                       337172                        
+      *                                                                                             
+      * Ctrl exercice en cours.                                                                     
+      *                                                                                             
+     C                   Z-ADD     MMCPT         I                 2 0                              
+     C                   Z-ADD     0             DSKPCL                                             
+     C                   MOVEL     CODSOC        DSKPCL                                             
+     C     DSKPCL        CHAIN     PLCOUE                             30                            
+      *                                                                                             
+     C     *IN30         IFEQ      *OFF                                         -+                  
+     C                   MOVEL     AACPT         BIDCPT                          !                  
+     C                   MOVE      MMCPT         BIDCPT                          !                  
+     C     BIDCPT        COMP      ANNEDB                               11       !                  
+     C  N11BIDCPT        COMP      ANNEFN                             11         !                  
+      *                                                     !                                       
+     C  N11              SETON                                          40       !                  
+     C  N11              GOTO      OKDATG                                        !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Ctrl exercice -1.                                                                           
+      *                                                                                             
+     C     DSKPCL        CHAIN     PLCOUA                             30                            
+      *                                                                                             
+     C     *IN30         IFEQ      *OFF                                         -+                  
+     C                   MOVEL     AACPT         BIDCPT            6 0           !                  
+     C                   MOVE      MMCPT         BIDCPT                          !                  
+     C     BIDCPT        COMP      ANNEDB                               11       !                  
+     C  N11BIDCPT        COMP      ANNEFN                             11         !                  
+      *                                                     !                                       
+     C  N11              SETOFF                                       40         !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                   CP3045                    
+     C     OKDATG        TAG                                                                        
+      *                                                                                             
+      * Enregistrement comptable inconnu.                                 CP3045                    
+      *                                                                   CP3045                    
+     C     *IN30         IFEQ      *ON                                          -+                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     1             ERR(J)                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Mois fermé.                                                       CP3045                    
+      *                                                                   CP3045                    
+     C     TMOITR(I)     IFNE      0                                            -+                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     2             ERR(J)                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Ctrl journal Table 03L.                                           CP3045                    
+      *                                                                   CP3045                    
+     C                   MOVEL     *BLANKS       DSKPAR                                             
+     C                   MOVEL     CODSOC        DSPA01                                             
+     C                   MOVE      '03L'         DSPA01                                             
+     C                   MOVEL     CODJOU        DSPA02                                             
+     C   40DSKPAR        CHAIN     PARAME                             13                            
+     C  N40DSKPAR        CHAIN     PARAMA                             13                            
+      *                                                                   CP3045                    
+     C     *IN13         IFEQ      *ON                                          -+                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     6             ERR(J)                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                   CP3045                    
+      * Ctrl journal Table 05L.                                           CP3045                    
+      *                                                                   CP3045                    
+     C                   MOVEL     *BLANKS       DSKPAR                                             
+     C                   MOVEL     CODSOC        DSPA01                                             
+     C                   MOVE      '05L'         DSPA01                                             
+     C                   MOVEL     CODJOU        £ZON05            5                                
+     C                   MOVE      '00'          £ZON05                                             
+     C                   MOVEL(P)  £ZON05        DSPA02                                             
+     C   40DSKPAR        CHAIN     PARAME                             13                            
+     C  N40DSKPAR        CHAIN     PARAMA                             13                            
+      *                                                                   CP3045                    
+     C     *IN13         IFEQ      *ON                                          -+                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     7             ERR(J)                          !                  
+     C                   MOVE      *ON           *IN99                           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Validité date comptable.                                          CP3045                    
+      *                                                                   CP3045                    
+     C                   MOVEL     DATCPT        £DAT                                               
+     C                   EXSR      àCHKD                                                            
+      *                                                                   CP3045                    
+     C     àRET2         IFEQ      '1'                                          -+                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     3             ERR(J)                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Inversion date comptable.                                         CP3045                    
+      *                                                                   CP3045                    
+     C                   MOVEL     DATCPT        £DAT                                               
+     C                   EXSR      àCVTE                                                            
+     C                   MOVEL     £DAT          WDTCPT            8 0                              
+     C                   SETOFF                                       30                            
+      *                                                                                             
+     C                   Z-ADD     CPTAN3        WZON7             5 0                              
+     C                   Z-ADD     CPTGE1        WZN007            7 0                              
+     C                   Z-ADD     SCPGE1        WZN006            6 0                              
+      *                                                                                             
+      * Controle compte.                                                  CP3045                    
+      *                                                                   CP3045                    
+     C     COMPT1        IFEQ      0                                            -+                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     9             ERR(J)                          !                  
+     C                   SETON                                        99         !                  
+      *                                                     !                                       
+     C                   ELSE                                                    *                  
+      *                                                     !                                       
+     C                   MOVE      COMPT1        DSKPLG                          !                  
+     C                   MOVEL     CODSOC        DSKPLG                          !                  
+      *                                                     !                                       
+      * Existence Compte général et recherche si totalisat  !                                       
+      *                                                     !                                       
+     C                   EXSR      CPTGEN                                        !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Validité date de pièce.                                           CP3045                    
+      *                                                                   CP3045                    
+     C                   MOVEL     DATPE1        £DAT                                               
+     C                   EXSR      àCHKD                                                            
+      *                                                                   CP3045                    
+     C     àRET2         IFEQ      '1'                                          -+                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     4             ERR(J)                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Inversion date pièce.                                             CP3045                    
+      *                                                                   CP3045                    
+     C                   MOVEL     DATPE1        £DAT                                               
+     C                   EXSR      àCVTE                                                            
+     C                   MOVEL     £DAT          WDTPIE            8 0                              
+      *                                                                                             
+      * Validité date d'échéance.                                         CP3045                    
+      *                                                                   CP3045                    
+     C                   MOVEL     DATEH1        £DAT                                               
+     C                   EXSR      àCHKD                                                            
+      *                                                                   CP3045                    
+     C     àRET2         IFEQ      '1'                                          -+                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     5             ERR(J)                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Inversion date d'échéance.                                        CP3045                    
+      *                                                                   CP3045                    
+     C                   MOVEL     DATEH1        £DAT                                               
+     C                   EXSR      àCVTE                                                            
+     C                   MOVEL     £DAT          WDTECH            8 0                              
+      *                                                                   CP3045                    
+      * Montant différent de zéros.                                       CP3047                    
+      *                                                                   CP3045                    
+     C     MTDEB1        COMP      0                                    3630                        
+     C     MTCRD1        COMP      0                                    3731                        
+     C   36              Z-SUB     MTDEB1        MTCRD1                                             
+     C   36              Z-ADD     0             MTDEB1                                             
+      *                                                                   CP3045                    
+     C   37              Z-SUB     MTCRD1        MTDEB1                                             
+     C   37              Z-ADD     0             MTCRD1                                             
+      *                                                                   CP3045                    
+     C   30                                                                                         
+     CAN 31              SETON                                        10                            
+      *                                                                   CP3045                    
+     C   30                                                                                         
+     CAN 31                                                                                         
+     CORN30                                                                                         
+     CANN31              DO                                                     -+                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     8             ERR(J)                          !                  
+     C                   ENDDO                                                  -+                  
+      *                                                                   CP3045                    
+     C     MTDEB1        IFNE      0                                            -+                  
+     C                   Z-ADD     MTDEB1        £MONT            11 2           !                  
+     C                   ELSE                                                    !                  
+     C                   Z-ADD     MTCRD1        £MONT                           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                   CP3045                    
+      * Traitement des erreurs.                                           CP3047                    
+      *                                                                   CP3045                    
+     C     J             IFNE      0                                            -+                  
+     C                   SETON                                        99         !                  
+     C                   EXSR      £TEST1                                        !                  
+     C                   EXCEPT    ENTET                                         !                  
+     C                   EXSR      EDIT                                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                   CP3045                    
+     C  N99              ADD       MTDEB1        ££DEBI                                             
+     C  N99              ADD       MTCRD1        ££CRDI                                             
+      *                                                                   CP3045                    
+     C     FINI          TAG                                                                        
+      *                                                                   CP3045                    
+     CL3   ££DEBI        IFNE      ££CRDI                                       -+                  
+     CL3                 SETON                                        94         !                  
+     CL3                 MOVEL     'ERREUR'      àERR                            !                  
+     CL3                 EXCEPT    ERRL3                                         !                  
+     CL3                 ENDIF                                                  -+                  
+      *                                                                                             
+      *=========================================================================                    
+      * *INZSR: initialisation.                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     *INZSR        BEGSR                                                                      
+      *                                                                                             
+      * Réception paramètres.                                                                       
+      *                                                                                             
+     C     *ENTRY        PLIST                                                                      
+     C                   PARM                    àERR              6                                
+     C                   PARM                    àTYP              3                                
+      *                                                                                             
+      * Initialisation variables.                                                                   
+      *                                                                                             
+     C                   TIME                    W1TIME            6 0                              
+     C                   MOVEL     *DATE         £DAT                                               
+     C                   EXSR      àCVTE                                                            
+     C                   MOVEL     £DAT          £UDATE            8 0                              
+     C                   Z-ADD     0             COCENT                                             
+     C                   Z-ADD     0             WZN005            5 0                              
+     C                   Z-ADD     0             WZN011           11 2                              
+     C                   Z-ADD     0             WZN116           11 6                              
+     C                   Z-ADD     0             WZN053            5 3                              
+     C                   Z-ADD     0             MTDEBI           11 2                              
+     C                   Z-ADD     0             MTCRDI           11 2                              
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * CPTGEN:                                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     CPTGEN        BEGSR                                                                      
+      *                                                                   CP3047                    
+     C                   SETOFF                                       3941                          
+      *                                                                                             
+     C   40DSKPLG        CHAIN     PLANGE                             87                            
+     C  N40DSKPLG        CHAIN     PLANGP                             87                            
+     C     *IN87         IFEQ      *ON                                          -+                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     9             ERR(J)                          !                  
+     C                   ELSE                                                    *                  
+     C     PGCPAN        COMP      'A'                                    39     !                  
+     C  N39PGCPAN        COMP      'O'                                    41     !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Compte centralisateur / S/Compte                                  CP3045                    
+      *                                                                   CP3045                    
+     C                   MOVEL     *BLANKS       DSKPLG                                             
+     C                   MOVEL     CODSOC        DSPL01                                             
+     C                   MOVE      WZN007        DSPL01                                             
+     C                   MOVEL     '000000'      DSPL02                                             
+     C   40DSKPLG        CHAIN     PLG04E                             87                            
+     C  N40DSKPLG        CHAIN     PLG04A                             87                            
+      *                                                                   CP3045                    
+     C     *IN87         IFEQ      *OFF                                         -+                  
+     C     WZN006        ANDEQ     *ZEROS                                        !                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     11            ERR(J)                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                   CP3045                    
+     C     *IN87         IFEQ      *ON                                          -+                  
+     C     WZN006        ANDNE     *ZEROS                                        !                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     11            ERR(J)                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Compte Analytique.                                                CP3045                    
+      *                                                                   CP3045                    
+     C                   SETOFF                                       44                            
+      *                                                                   CP3045                    
+      * Compte Analytique=A 39 ON                                         CP3045                    
+      *                                                                   CP3045                    
+     C     *IN39         IFEQ      *ON                                          --+                 
+     C     WZON7         IFEQ      0                                            -+!                 
+     C                   SETON                                        99         !!                 
+     C                   ADD       1             J                               !!                 
+     C                   Z-ADD     12            ERR(J)                          !!                 
+     C                   ENDIF                                                  -+!                 
+     C                   ENDIF                                                  --+                 
+      *                                                                   CP1010                    
+      * Compte analytique=O 41=*ON                                        CP3045                    
+      *                                                                   CP3045                    
+     C     *IN41         IFEQ      *ON                                          --+                 
+     C     WZON7         COMP      6000000                            44  44      !                 
+     C   44WZON7         IFEQ      0                                            -+!                 
+     C                   ADD       1             J                               !!                 
+     C                   Z-ADD     12            ERR(J)                          !!                 
+     C                   ENDIF                                                  -+!                 
+     C                   ENDIF                                                  --+                 
+      *                                                                   CP3045                    
+     C  N39                                                                                         
+     CANN41              GOTO      CTOTA                                                            
+     C                   MOVEL     *BLANKS       DSKPLA                                             
+     C                   MOVEL     CODSOC        DSPLA1                                             
+     C                   MOVE      WZN007        DSPLA1                                             
+     C                   MOVE      WZON7         DSPLA2                                             
+     C                   SETOFF                                       84                            
+     C   40DSKPLA        CHAIN     PLANAE                             84                            
+     C  N40DSKPLA        CHAIN     PLANAP                             84                            
+      *                                                                   CP1010                    
+      * Compte Analytique=Inexistant                                      CP3045                    
+      *                                                                   CP3045                    
+     C     *IN84         IFEQ      *ON                                          -+                  
+     C                   SETON                                        99         !                  
+     C                   ADD       1             J                               !                  
+     C                   Z-ADD     13            ERR(J)                          !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                   CP3045                    
+     C     CTOTA         ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * EDIT.                                                                                       
+      *=========================================================================                    
+      *                                                                                             
+     C     EDIT          BEGSR                                                                      
+      *                                                                                             
+     C                   DO        15            J                              --+                 
+     C     ERR(J)        IFNE      0                                            -+!                 
+     C                   Z-ADD     ERR(J)        £M                2 0           !!                 
+     C                   MOVEL(P)  MSG(£M)       £MESAG           64             !!                 
+     C                   EXCEPT    ERRE                                          !!                 
+     C                   ENDIF                                                  -+!                 
+     C                   ENDDO                                                  --+                 
+      *                                                                                             
+     C                   EXCEPT    FIN                                                              
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * £TEST1:                                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     £TEST1        BEGSR                                                                      
+      *                                                                                             
+     C                   SETOFF                                       28                            
+     C   OA              SETOFF                                       27                            
+      *                                                                                             
+     C  N27              SETON                                        2728                          
+      *                                                                                             
+     C   28              EXCEPT    $ENT01                                                           
+     C  N10              MOVEL     'ERREUR'      àERR                                               
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * àCHKD:                                                                                      
+      *=========================================================================                    
+      *                                                                                             
+     C     àCHKD         BEGSR                                                                      
+     C                   CALL      'CHKD2000'                                                       
+     C                   PARM                    £DAT                                               
+     C                   PARM      '*YYMD'       àFMTC                                              
+     C                   PARM      '0'           àRET2                                              
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * àCVTE:                                                                                      
+      *=========================================================================                    
+      *                                                                                             
+     C     àCVTE         BEGSR                                                                      
+      *                                                                                             
+     C                   CALL      'CVTD2000'                                                       
+     C                   PARM      £DAT          àDATS             8                                
+     C                   PARM      '*YYMD'       àFMTS            10                                
+     C                   PARM      '*DMYY'       àFMTC            10                                
+     C                   PARM      *BLANK        àDATC             8                                
+     C                   PARM      '0'           àRET2             1                                
+     C                   MOVEL     àDATC         £DAT              8                                
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+     OAFMVTJOU  DADD 01N99                                                      CP3047              
+     O                       ENREG              150                             CP3047              
+     O                                            2 'MD'                        CP3047              
+      * Date du Jour.                                                                               
+     O                       *DATE               47                                                 
+     O                       CPTGE1              54                             CP3047              
+     O                       SCPGE1              60                             CP3047              
+     O                       WZN005              63P                                                
+     O                       WZN005              66P                                                
+     O                       CPTAN3              71                             CP3047              
+     O                       MTDEB1              93P                            CP3047              
+     O                       MTCRD1              99P                            CP3047              
+     O                                          135 '0'                         CP3047              
+     O                                          141 '00'                        CP3047              
+     O                                          152 '00000000'                  CP3047              
+     O                                          158 '000000'                    CP3047              
+      * Montant devise.                                                                             
+     O               96      REPARI             166P                                                
+     O              N96      WZN116             166P                                                
+     O               96 97   MTCRDD             172P                                                
+     O               96N97   MTDEBD             172P                                                
+     O                 N96   WZN011             172P                                                
+      * Montant EURO.                                                                               
+     O               95      REPEUR             178P                                                
+     O              N95      WZN116             178P                                                
+     O               95 97   MTCEUR             184P                                                
+     O               95N97   MTDEUR             184P                                                
+     O                 N95   WZN011             184P                                                
+     O                       WZN053             189P                                                
+     O                       WZN011             195P                                                
+     O                       WZN053             200P                                                
+     O                       WZN011             206P                                                
+     O                       WZN053             211P                                                
+     O                       WZN011             217P                                                
+     O                       WZN053             222P                                                
+     O                       £MONT              228P                                                
+     O                       ODDVAL             236                                                 
+     O                       ODBANQ             243                                                 
+     O                                          246 'OD '                                           
+     O                                          255 '0000000'                                       
+     O                                          364 '00000000'                  CP3047              
+     O                                          371 '0000000'                   CP3047              
+     O                                          394 '00000000'                  CP3047              
+     O                                          429 '00000'                     CP3047              
+     O                                          434 '00000'                     CP3047              
+     O                                          447 '00'                        CP3047              
+     O                                          466 '00000000'                  CP3047              
+     O                                          540 '0000000000000000'          CP3047              
+     O                                          556 '0000000000000000'          CP3047              
+     O                                          564 '00000000'                  CP3047              
+      *                                                                                             
+     O                                          570 '000000'                                        
+      *                                                                                             
+     O                       ODJOUR             575                                                 
+     O                       ODLIGN             579                                                 
+     O                                          586 '0000000'                                       
+     O                                          592 '000000'                                        
+     O                                          602 '0000000000'                                    
+      *                                                                                             
+     OIMPR      E            $ENT01         3 03                                CP3047              
+     O                       TL1(1)              66                                                 
+     O                       TL1(1)             132                                                 
+     O          E            $ENT01         0                                                       
+     O                       TL1(3)              66                                                 
+     O                       TL1(4)             132                                                 
+     O                       W1LSOC              18                             C2010A              
+     O                       £UDATE             123 '  /  /   0'                                    
+     O                       W1TIME             132 '0 :  :  '                                      
+     O          E            $ENT01      0  1                                                       
+     O                       TL1(3)              66                                                 
+     O                       TL1(4)             132                                                 
+     O                       W1CSOC               2                             C2010A              
+     O                       W1LSOC              18                             C2010A              
+     O          E            $ENT01         1                                                       
+     O                                            8 'CA3047  '                                      
+     O          E            $ENT01         2                                                       
+     O                       TL1(1)              66                                                 
+     O                       TL1(2)             132                                                 
+     O                       PAGE          Z    132                                                 
+      *                                                                                             
+     O          E    01 99   ENTET       1  1                                   CP3047              
+     O                       TB(1)               66                             CP3047              
+     O                       TB(2)              132                             CP3047              
+     O                       TB(3)              198                             CP3047              
+     O          E    01 99   ENTET          1                                   CP3047              
+     O                       TB(4)               66                             CP3047              
+     O                       TB(5)              132                             CP3047              
+     O                       TB(6)              198                             CP3047              
+     O          E    01 99   ENTET          1                                   CP3047              
+     O                       TB(1)               66                             CP3047              
+     O                       TB(2)              132                             CP3047              
+     O                       TB(3)              198                             CP3047              
+     O          E    01 99   ENTET          1                                   CP3047              
+     O                       TB(7)               66                             CP3047              
+     O                       TB(8)              132                             CP3047              
+     O                       TB(9)              198                             CP3047              
+     O                       WDTPIE               9                             CP3047              
+     O                       CODJOU              15                             CP3047              
+     O                       LIBEL1              48                             CP3047              
+     O                       NUMPI1        Z     56                             CP3047              
+     O                       REFLE1        Z     65                             CP3047              
+     O                       WDTECH              76                             CP3047              
+     O                       WDTCPT              89                             CP3047              
+     O          E    01 99   ENTET          1                                   CP3047              
+     O                       TB(10)              66                             CP3047              
+     O                       TB(11)             132                             CP3047              
+     O                       TB(12)             198                             CP3047              
+     O          E    01 99   ENTET          1                                   CP3047              
+     O                       TB(13)              66                             CP3047              
+     O                       TB(14)             132                             CP3047              
+     O                       TB(15)             198                             CP3047              
+     O                                           17 'Compte/Ss-compte'          CP3047              
+     O                                           28 'Analytique'                CP3047              
+     O                                           48 'Débit'                     CP3047              
+     O                                           78 'Crédit'                    CP3047              
+     O          E    01 99   ENTET          1                                   CP3047              
+     O                       TB(13)              66                             CP3047              
+     O                       TB(14)             132                             CP3047              
+     O                       TB(15)             198                             CP3047              
+     O                                           17 '--------------  '          CP3047              
+     O                                           28 '----------'                CP3047              
+     O                                           48 '-----'                     CP3047              
+     O                                           78 '------'                    CP3047              
+     O          E    01 99   ENTET          1                                   CP3047              
+     O                       TB(13)              66                             CP3047              
+     O                       TB(14)             132                             CP3047              
+     O                       TB(15)             198                             CP3047              
+     O                       CPTGE1        Z      8                             CP3047              
+     O                       SCPGE1        Z     16                             CP3047              
+     O                       CPTAN3              26 '    0'                     CP3047              
+     O          E    01 99   ENTET          1                                   CP3047              
+     O                       TB(13)              66                             CP3047              
+     O                       TB(14)             132                             CP3047              
+     O                       TB(15)             198                             CP3047              
+     O                       MTDEB1        M     49                             CP3047              
+     O                       MTCRD1        M     79                             CP3047              
+     O          E       99   ERRE           1                                   CP3047              
+     O                       TB(13)              66                             CP3047              
+     O                       TB(14)             132                             CP3047              
+     O                       TB(15)             198                             CP3047              
+     O                       £MESAG             160                             CP3047              
+     O          E    01 99   FIN            1                                   CP3047              
+     O                       TB(16)              66                             CP3047              
+     O                       TB(17)             132                             CP3047              
+     O                       TB(18)             198                             CP3047              
+     O          E    01 99   FIN         1  2                                   CP3047              
+     O                                           20 '  '                        CP3047              
+      *                                                                                             
+     O          E    94      ERRL3          3 03                                CP3047              
+     O                       TL1(1)              66                                                 
+     O                       TL1(1)             132                                                 
+     O          E    94      ERRL3          0                                                       
+     O                       TL1(3)              66                                                 
+     O                       TL1(4)             132                                                 
+     O                       W1LSOC              18                             C2010A              
+     O                       UDATE         Y    123                                                 
+     O                       W1TIME             132 '0 :  :  '                                      
+     O          E    94      ERRL3       0  1                                                       
+     O                       TL1(3)              66                                                 
+     O                       TL1(4)             132                                                 
+     O                       W1CSOC               2                             C2010A              
+     O                       W1LSOC              18                             C2010A              
+     O          E    94      ERRL3          1                                                       
+     O                                            8 'CA3047  '                                      
+     O          E    94      ERRL3          2                                                       
+     O                       TL1(1)              66                                                 
+     O                       TL1(2)             132                                                 
+     O                       PAGE          Z    132                                                 
+      *                                                                                             
+     O          E    94      ERRL3       1  1                                   CP3047              
+     O                       TA(1)               66                             CP3047              
+     O                       TA(2)              132                             CP3047              
+     O          E    94      ERRL3          1                                   CP3047              
+     O                       TA(3)               66                             CP3047              
+     O                       TA(4)              132                             CP3047              
+     O          E    94      ERRL3          1                                   CP3047              
+     O                       TA(1)               66                             CP3047              
+     O                       TA(2)              132                             CP3047              
+     O          E    94      ERRL3          1                                   CP3047              
+     O                       TA(5)               66                             CP3047              
+     O                       TA(6)              132                             CP3047              
+     O                       ££DEBI        M     17                             CP3047              
+     O                       ££CRDI        M     34                             CP3047              
+     O                                           70 'Erreur Débit/Crédit'       CP3047              
+     O          E    94      ERRL3          1                                   CP3047              
+     O                       TA(7)               66                             CP3047              
+     O                       TA(8)              132                             CP3047              
+** TB                                                                                               
++--------+-------+------------------------------+-------+--                                         
+-+---------+-------------+---------------------------------                                         
+-------------------------------+                                                                    
+!  DATE  !JOURNAL!        L I B E L L E         ! PIECE ! LETTRAGE                                  
+ !ECHEANCE ! D.COMPTABLE !              A   N   O   M   A   L   I                                   
+  E   S                        !                                                                    
+!        !       !                              !       !                                           
+ !         !             !                                                                          
+                               !                                                                    
+!________!_______!______________________________!_______!_________                                  
+_!_________!_____________!________________________________________                                  
+_______________________________!                                                                    
+!                                                                                                   
+                         !                                                                          
+                               !                                                                    
+!_________________________________________________________________                                  
+_________________________!________________________________________                                  
+_______________________________!                                                                    
+** TA                                                                                               
++----------------+----------------+------------------------                                         
+----------+                                                                                         
+! DEBIT          ! CREDIT         !  ANOMALIES                                                      
+          !                                                                                         
+!                !                !                                                                 
+          !                                                                                         
+!________________!________________!_______________________________                                  
+__________!                                                                                         
+** TL1                                                                                              
+__________________________________________________________________                                  
+_______________________________________________________ Page                                        
+                                       Etat de CTRL de saisie des                                   
+O.Diverses                                                                                          
+** MSG                                                                                              
+Enregistrement comptable inconnu.                                                                   
+Mois comptable fermé.                                                                               
+Date comptable invalide.                                                                            
+Date de pièce invalide.                                                                             
+Date d'échéance invalide.                                                                           
+Code journal inexistant table 03.                                                                   
+Code journal inexistant table 05.                                                                   
+Montant égal à zéros.                                                                               
+Compte général inexistant                                                                           
+Total lettrage <> du montant de l'écriture                                                          
+Sous compte invalide.                                                                               
+Compte Analytique Obligatoire.                                                                      
+Compte Analytique inexistant.                                                                       

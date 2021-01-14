@@ -1,0 +1,474 @@
+      *=========================================================================                    
+      *                                                                                             
+      *   Edition Grand livre par date comptable 1 seul Cpte par page.                              
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  Détail des indicateurs utilisés.                                                           
+      *                                                                                             
+      *    *IN01 _  Aide.                                                                           
+      *    *IN02 _  Touche de fonction incorrecte.                                                  
+      *    *IN03 _  Exit.                                                                           
+      *    *IN04 _  Invite.                                                                         
+      *    *IN05 _  Réafficher.                                                                     
+      *    *IN12 _  Annuler.                                                                        
+      *    *IN21 _  QUSCMDLN.                                                                       
+      *    *IN22 _  DSPOBJD.                                                                        
+      *    *IN28 _  ROLLUP.                                                                         
+      *    *IN28 _  ROLLDOWN.                                                                       
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  Constitution des variables:                                                                
+      *                                                                                             
+      *     VAR   _  Variable fichier.                                                              
+      *    àVAR   _  Variable paramètre.                                                            
+      *    $VAR   _  Variable écran.                                                                
+      *    £VAR   _  Variable programme.                                                            
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      * Fichier Plan comptable.                                                                     
+      *                                                                                             
+     FCPPLG01   IF   E           K DISK                                         CG3022              
+      *                                                                                             
+      * Fichier Grand livre.                                                                        
+      *                                                                                             
+     FCPLIVRE   IPE  F  564        DISK                                                             
+      *                                                                                             
+      * Fichier Grand livre.                                                                        
+      *                                                                                             
+     FCPLIV02   IF   E           K DISK                                                             
+      *                                                                                             
+      * Fichier Etat.                                                                               
+      *                                                                                             
+     FCP5150P   O    F  132        PRINTER OFLIND(*INOF)                        CG3022              
+      *                                                                                             
+      *=========================================================================                    
+     D TB              S             66    DIM(8) CTDATA PERRCD(1)                                  
+     D TL1             S             66    DIM(4) CTDATA PERRCD(1)                                  
+     D DB              S             13  2 DIM(12)                                                  
+     D CR              S             13  2 DIM(12)                                                  
+      *                                                                                             
+      * LDA                                                                                         
+      *                                                                                             
+     D                UDS                                                                           
+     D  ZCCSOC               350    351                                                             
+     D  ZCLSOC               352    366                                                             
+      *=========================================================================                    
+      *                                                                                             
+     ICPLIVRE   AA  01                                                                              
+     I                                  3    4  CODSOC                                              
+     I                                  9   11  CODJOU                                              
+     I                                 16   23 0DATCPT                                              
+     I                                 16   19 0AACPT                                               
+     I                                 20   21 0MMCPT                                               
+     I                                 22   23 0JJCPT                                               
+     I                                 32   39 0DATECH                                              
+     I                                 32   35 0AAECH                                               
+     I                                 36   37 0MMECH                                               
+     I                                 38   39 0JJECH                                               
+     I                                 48   54 0CPTGED                                              
+     I                                 55   60 0SCPGED                                              
+     I                                 48   60 0CPTSCP        L2                                    
+     I                             P   61   63 0LINUEC                                              
+     I                                 73   79 0NUMPIE                                              
+     I                             P   88   93 2MTDEBI                                              
+     I                             P   94   99 2MTCRDI                                              
+     I                                100  129  LIBELD                                              
+     I                                130  133  CODLET                                              
+      *                                                                                             
+      * Fichier Grand-livre pour recherche du Solde Antérieur                                       
+      *                                                                                             
+     IAFPCGF01                                                                                      
+      *                                                                                             
+      * Débits.                                                                                     
+      *                                                                                             
+     I              PCGD01                      DB(1)                                               
+     I              PCGD02                      DB(2)                                               
+     I              PCGD03                      DB(3)                                               
+     I              PCGD04                      DB(4)                                               
+     I              PCGD05                      DB(5)                                               
+     I              PCGD06                      DB(6)                                               
+     I              PCGD07                      DB(7)                                               
+     I              PCGD08                      DB(8)                                               
+     I              PCGD09                      DB(9)                                               
+     I              PCGD10                      DB(10)                                              
+     I              PCGD11                      DB(11)                                              
+     I              PCGD12                      DB(12)                                              
+      *                                                                                             
+      * Crédits.                                                                                    
+      *                                                                                             
+     I              PCGC01                      CR(1)                                               
+     I              PCGC02                      CR(2)                                               
+     I              PCGC03                      CR(3)                                               
+     I              PCGC04                      CR(4)                                               
+     I              PCGC05                      CR(5)                                               
+     I              PCGC06                      CR(6)                                               
+     I              PCGC07                      CR(7)                                               
+     I              PCGC08                      CR(8)                                               
+     I              PCGC09                      CR(9)                                               
+     I              PCGC10                      CR(10)                                              
+     I              PCGC11                      CR(11)                                              
+     I              PCGC12                      CR(12)                                              
+      *                                                                                             
+      *=========================================================================                    
+      * Rupture L2(Compte/S Compte)                                                                 
+      *=========================================================================                    
+      *                                                                                             
+     C     *INL2         IFEQ      *ON                                                              
+     C                   Z-ADD     0             DEBANN                                   !         
+     C                   Z-ADD     0             CREANN                                   !         
+     C                   Z-ADD     0             DEBRUP           12 2                    !         
+     C                   Z-ADD     0             CRERUP           12 2                    !         
+     C                   Z-ADD     0             DEBRU1                                   !         
+     C                   Z-ADD     0             CRERU1                                   !         
+     C                   Z-ADD     0             TDEBME                                   !         
+     C                   Z-ADD     0             TCREME                                   !         
+      *                                                                                             
+      * Controle compte.                                                                            
+      *                                                                                             
+     C     £KPLG1        CHAIN     CPPLG01                            50                       CG302
+      *                                                                                             
+      * Calcul solde antérieur à la date de début.                                                  
+      *                                                                                             
+     C     *IN50         IFEQ      *OFF                                                             
+     C                   EXSR      SR1A00                                                           
+     C                   ENDIF                                                                      
+      *                                                              !                              
+     C                   END                                                    ----------+         
+      *                                                                                             
+      * Inversion date de pièce                                      !                              
+      *                                                                                             
+     C                   MOVEL     JJCPT         ZON4              4                      !         
+     C                   MOVE      MMCPT         ZON4                                     !         
+     C                   MOVEL     ZON4          DATCPT                                   !         
+     C                   MOVE      AACPT         DATCPT                                   !         
+      *                                                                                             
+      * Inversion date d'échéance                                    !                              
+      *                                                                                             
+     C                   MOVEL     JJECH         ZON4                                     !         
+     C                   MOVE      MMECH         ZON4                                     !         
+     C                   MOVEL     ZON4          DATECH                                   !         
+     C                   MOVE      AAECH         DATECH                                   !         
+      *                                                                                             
+      * Récupération du Libellé de l'écriture                        !                              
+      *                                                                                             
+     C                   MOVE      *BLANK        DESIG            28                                
+     C                   MOVEL     LIBELD        DESIG                                              
+      *                                                                                             
+      * Cumul des Montants                                                                          
+      *                                                                                             
+     C     DEBANN        ADD       TDEBME        DEBRUP                                             
+     C     CREANN        ADD       TCREME        CRERUP                                             
+     C     DEBRUP        SUB       CRERUP        SOLRUP           12 2                              
+     C                   ADD       MTDEBI        TDEBME           12 2                              
+     C                   ADD       MTCRDI        TCREME           12 2                              
+     C     TDEBME        SUB       TCREME        TSOLME           12 2                              
+     C     MTDEBI        SUB       MTCRDI        SOLDX            11 2                              
+     C                   ADD       SOLDX         SOLRUX           12 2                              
+      *                                                                                             
+      * Solde si rupture OF                                          !                              
+      *                                                                                             
+     C                   ADD       MTDEBI        DEBRU1           12 2                              
+     C                   ADD       MTCRDI        CRERU1           12 2                              
+     C     DEBRU1        SUB       CRERU1        SOLRU1           12 2                              
+      *                                                                                             
+      * Calcul des Montants Cumulés                                                                 
+      *                                                                                             
+     C                   ADD       MTDEBI        DEBGEN           12 2                              
+     C                   ADD       MTCRDI        CREGEN           12 2                              
+     C     DEBGEN        SUB       CREGEN        SOLGEN           12 2                              
+      *                                                                                             
+      * Indicateur code Lettrage                                                                    
+      *                                                                                             
+     C     MTDEBI        COMP      0                                      97                        
+      *                                                                                             
+     C     FIN           TAG                                                                        
+      *                                                                                             
+      * Calcul du total général                                                                     
+      *                                                                                             
+     CL2                 ADD       TDEBME        DEBANN                                             
+     CL2                 ADD       TCREME        CREANN                                             
+     CL2   DEBANN        SUB       CREANN        SOLDE            12 2                              
+      *                                                                                             
+      *=========================================================================                    
+      * *INZSR: initialisation.                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     *INZSR        BEGSR                                                                      
+      *                                                                                             
+      * Réception paramètres.                                                                       
+      *                                                                                             
+     C     *ENTRY        PLIST                                                                      
+     C                   PARM                    àOPT              1                                
+     C                   PARM                    àDTDE             8                                
+     C                   PARM                    àDTFI             8                                
+     C                   PARM                    àDEBM             2                                
+      *                                                                                             
+      * Description de la clé de CPPLG01.                                                           
+      *                                                                                             
+     C     £KPLG1        KLIST                                                                      
+     C                   KFLD                    CODSOC                                             
+     C                   KFLD                    CPTGED                                             
+     C                   KFLD                    SCPGED                                             
+      *                                                                                             
+      * Description de la clé de CPLIV02.                                                           
+      *                                                                                             
+     C     £KLIV2        KLIST                                                                      
+     C                   KFLD                    CODSOC                                             
+     C                   KFLD                    CPTGED                                             
+     C                   KFLD                    SCPGED                                             
+     C                   KFLD                    ££DTDE                                             
+      *                                                                                             
+      * Initialisation variables.                                                                   
+      *                                                                                             
+     C                   TIME                    W1TIME            6 0                              
+     C                   MOVEL     *DATE         £UDATE            8 0                              
+      *                                                                                             
+     C                   MOVEL     àDTDE         £DPRE             8 0                         CP304
+     C                   MOVEL     àDTDE         ££DTDE            8 0                         CP304
+     C                   MOVE      '01'          ££DTDE                                        CP304
+     C                   MOVEL     àDTDE         £PER              6 0                         CP304
+     C                   MOVE      £PER          £MDE              2 0                         CP304
+     C                   MOVEL     àDTDE         £DAT                                          CP304
+     C                   EXSR      àCVTE                                                       CP304
+     C                   MOVEL     £DAT          £DTDE             8 0                         CP304
+      *                                                                                             
+     C                   MOVEL     àDTFI         £DAT                                          CP304
+     C                   EXSR      àCVTE                                                       CP304
+     C                   MOVEL     £DAT          £DTFI             8 0                         CP304
+      *                                                                                             
+     C                   MOVEL     àDEBM         £DEBM             2 0                         CP304
+      *                                                                                             
+     C     àOPT          COMP      '3'                                545253                        
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * àCVTE:                                                                                      
+      *=========================================================================                    
+      *                                                                                             
+     C     àCVTE         BEGSR                                                                      
+      *                                                                                             
+     C                   CALL      'CVTD2000'                                                       
+     C                   PARM      £DAT          àDATS             8                                
+     C                   PARM      '*YYMD'       àFMTS            10                                
+     C                   PARM      '*DMYY'       àFMTC            10                                
+     C                   PARM      *BLANK        àDATC             8                                
+     C                   PARM      '0'           àRET2             1                                
+     C                   MOVEL     àDATC         £DAT              8                                
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * SR1A00:                                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     SR1A00        BEGSR                                                                      
+      *                                                                                             
+     C     £DEBM         COMP      1                                      60                        
+     C     £DEBM         COMP      £MDE                               636261                        
+      *                                                                                             
+     C   61              GOTO      SR1A99                                                           
+      *                                                                                             
+     C   60              Z-ADD     1             I                 2 0                              
+     C  N60              Z-ADD     £DEBM         I                                                  
+      *                                                                                             
+     C   60                                                                                         
+     COR 62              Z-ADD     £MDE          WN2               2 0                              
+     C   63              Z-ADD     13            WN2                                                
+      *                                                                                             
+     C     SR1A01        TAG                                                                        
+      *                                                                                             
+     C     I             COMP      WN2                                64  64                        
+      *                                                                                             
+     C   64                                                                                         
+     CANN63              GOTO      SR1A99                                                           
+     C  N64              EXSR      SR2A00                                                           
+     C  N64              GOTO      SR1A01                                                           
+     C                   Z-ADD     1             I                                                  
+     C                   Z-ADD     £MDE          WN2                                                
+     C                   SETOFF                                       63                            
+     C                   GOTO      SR1A01                                                           
+      *                                                                                             
+     C     SR1A99        TAG                                                                        
+      *                                                                                             
+     C     £KLIV2        SETLL     CPLIV02                                                          
+      *                                                                                             
+      * Récupération pour addition dans les Cumuls (debits/credits)                                 
+      * des Jours Antérieurs au jour de la Date d'arreté DEBUT.                                     
+      * Ex:Si Date = 12021990 (Récupération du 01021990 au 11021990)                                
+      *                                                                                             
+     C                   SETOFF                                       3230                          
+     C     LECT          TAG                                                                        
+     C                   READ      CPLIV02                                32                        
+     C  N32GLCSOC        COMP      CODSOC                             3232                          
+     C  N32GLCPTG        COMP      CPTGED                             3232                          
+     C  N32GLSCPG        COMP      SCPGED                             3232                          
+     C  N32GLDTCP        COMP      £DPRE                                30                          
+     C  N32                                                                                         
+     CAN 30              ADD       GLMTDT        DEBANN                                             
+     C  N32                                                                                         
+     CAN 30              ADD       GLMTCT        CREANN                                             
+     C  N32                                                                                         
+     CAN 30              GOTO      LECT                                                             
+     C                   Z-ADD     DEBANN        DEBRU1                                             
+     C                   Z-ADD     CREANN        CRERU1                                             
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * SR2A00:                                                                                     
+      *=========================================================================                    
+      *                                                                                             
+      *  Calcul du solde antérieur issu du Plan comptable général                                   
+      *                                                                                             
+     C     SR2A00        BEGSR                                                                      
+     C                   ADD       DB(I)         DEBANN           12 2                              
+     C                   ADD       CR(I)         CREANN           12 2                              
+     C     I             ADD       1             I                                                  
+     C     SR2A99        ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+     OCP5150P   D    L2                     1 01                                                    
+     O         OR    OFNL2                                                                          
+     O                       TL1(1)              66                                                 
+     O                       TL1(1)             132                                                 
+     O          D    L2                     0                                                       
+     O         OR    OFNL2                                                                          
+     O                       TL1(3)              66                                                 
+     O                     52                    75 ' GENERAUX'                                     
+     O                     53                    78 ' AUXILIAIRES'                                  
+     O                     54                    90 ' GENERAUX ET AUXILIAIRES'                      
+     O                       ZCLSOC              18                                                 
+     O                       £UDATE             123 '  /  /    '                                    
+     O                       W1TIME             132 '0 :  :  '                                      
+     O          D    L2                  0  1                                                       
+     O         OR    OFNL2                                                                          
+     O                       TL1(3)              66                                                 
+     O                     52                    75 ' GENERAUX'                                     
+     O                     53                    78 ' AUXILIAIRES'                                  
+     O                     54                    90 ' GENERAUX ET AUXILIAIRES'                      
+     O                       ZCCSOC               2                                                 
+     O                       ZCLSOC              18                                                 
+     O          D    L2                     0                                                       
+     O         OR    OFNL2                                                                          
+     O                                            8 'CG514A  '                                      
+     O                                           54 'Arrété du'                                     
+     O                       £DTDE               65 '  /  /    '                                    
+     O                                           68 'au'                                            
+     O                       £DTFI               79 '  /  /    '                                    
+     O          D    L2                     1                                                       
+     O         OR    OFNL2                                                                          
+     O                       £DTDE               65 '  /  /    '                                    
+     O                       £DTFI               79 '  /  /    '                                    
+     O          D    L2                     2                                                       
+     O         OR    OFNL2                                                                          
+     O                       TL1(1)              66                                                 
+     O                       TL1(2)             132                                                 
+     O                       PAGE          Z    132                                                 
+     O          D    L2                  1  0                                                       
+     O         OR    OFNL2                                                                          
+     O                                            6 'Compte'                                        
+     O                       CPTGED              14                                                 
+     O                       SCPGED              21                                                 
+     O                 N50   PCGLIB              52                                                 
+     O                  50                       39 'COMPTE INEXISTANT'                             
+     O               L2                          63 'Solde Ant'                                     
+     O               L2      DEBRUP              79 '    .   .   ,  '                               
+     O               L2      CRERUP             105 '    .   .   ,  '                               
+     O               L2      SOLRUP             123 '    .   .   ,  -'                              
+      *                                                                                             
+     O               OFNL2                       69 'Report         '                               
+     O               OFNL2   DEBRU1              79 '    .   .   ,  '                               
+     O               OFNL2   CRERU1             105 '    .   .   ,  '                               
+     O               OFNL2   SOLRU1             123 '    .   .   ,  -'                              
+     O          D    L2                     1                                                       
+     O         OR    OFNL2                                                                          
+     O                       CPTGED              14                                                 
+     O                       SCPGED              21                                                 
+     O               L2      DEBRUP              79 '    .   .   ,  '                               
+     O               L2      CRERUP             105 '    .   .   ,  '                               
+     O               L2      SOLRUP             123 '    .   .   ,  -'                              
+     O               OFNL2   DEBRU1              79 '    .   .   ,  '                               
+     O               OFNL2   CRERU1             105 '    .   .   ,  '                               
+     O               OFNL2   SOLRU1             123 '    .   .   ,  -'                              
+     O          D    L2                     1                                                       
+     O         OR    OFNL2                                                                          
+     O                       TB(1)               66                                                 
+     O                       TB(2)              132                                                 
+     O          D    L2                     0                                                       
+     O         OR    OFNL2                                                                          
+     O                       TB(3)               66                                                 
+     O                       TB(4)              132                                                 
+     O                       TB(5)               66                                                 
+     O                       TB(6)              132                                                 
+     O          D    L2                     1                                                       
+     O         OR    OFNL2                                                                          
+     O                       TB(5)               66                                                 
+     O                       TB(6)              132                                                 
+     O          D    L2                     1                                                       
+     O         OR    OFNL2                                                                          
+     O                       TB(7)               66                                                 
+     O                       TB(8)              132                                                 
+     O          D    01                     1                                                       
+     O                       TB(3)               66                                                 
+     O                       TB(4)              132                                                 
+     O                       DATCPT              11 '  .  .    '                                    
+     O                       CODJOU              15                                                 
+     O                       DESIG               44                                                 
+     O                       NUMPIE        Z     52                                                 
+     O                       DATECH              63 '  .  .    '                                    
+     O                       MTDEBI        2     79                                                 
+     O              N97      CODLET              85                                                 
+     O               97      CODLET              89                                                 
+     O                       MTCRDI        2    105                                                 
+     O                       SOLRUX             123 '    .   .   ,  -'                              
+     O                       LINUEC        Z    130                                                 
+     O          T    OFNL2                  1                                                       
+     O         OR    L2                                                                             
+     O                       TB(7)               66                                                 
+     O                       TB(8)              132                                                 
+     O          T    L2                     0                                                       
+     O                                           63 'Total de la période. . .'                      
+     O                       TDEBME              79 '    .   .   ,  '                               
+     O                       TCREME             105 '    .   .   ,  '                               
+     O                       TSOLME             123 '    .   .   ,  -'                              
+     O          T    L2                     1                                                       
+     O                       TDEBME         B    79 '    .   .   ,  '                               
+     O                       TCREME         B   105 '    .   .   ,  '                               
+     O                       TSOLME         B   123 '    .   .   ,  -'                              
+     O          T    L2                     0                                                       
+     O                                           63 'Total Cumulés. . . . . .'                      
+     O                       DEBANN              79 '    .   .   ,  '                               
+     O                       CREANN             105 '    .   .   ,  '                               
+     O                       SOLDE              123 '    .   .   ,  -'                              
+     O          T    L2                     1                                                       
+     O                       DEBANN         B    79 '    .   .   ,  '                               
+     O                       CREANN         B   105 '    .   .   ,  '                               
+     O                       SOLDE          B   123 '    .   .   ,  -'                              
+     O          T    LR                  1  0                                                       
+     O                                           68 'Total général. . . . . .'                      
+     O                       DEBGEN              79 '    .   .   ,  '                               
+     O                       CREGEN             105 '    .   .   ,  '                               
+     O                       SOLGEN             123 '    .   .   ,  -'                              
+     O          T    LR                     1                                                       
+     O                                           68 'Total général. . . . . .'                      
+     O                       DEBGEN              79 '    .   .   ,  '                               
+     O                       CREGEN             105 '    .   .   ,  '                               
+     O                       SOLGEN             123 '    .   .   ,  -'                              
+**                                                                                                  
+*----------*---*----------------------------*-------*----------*--                                  
+-------------*----------*--------------*------------------*------*                                  
+!          !   !                            !       !          !                                    
+             !          !              !                  !      !                                  
+!   Date   !Jrn!           Libellé          !N°Piéce! Echéance !                                    
+   Débit     ! Lettrage !    Crédit    !      Solde       !N°Ecr.!                                  
++----------+---+----------------------------+-------+----------+--                                  
+-------------+----------+--------------+------------------+------+                                  
+** TL1                                                                                              
+__________________________________________________________________                                  
+_______________________________________________________ Page                                        
+                                            HISTORIQUE DES COMPTES                                  
+------------------------------------------------------------------                                  

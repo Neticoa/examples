@@ -1,0 +1,477 @@
+      *=========================================================================                    
+      *                                                                                             
+      *   Edition budget.                                                                           
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  DÈtail des indicateurs utilisÈs.                                                           
+      *                                                                                             
+      *    *IN01 _  Aide.                                                                           
+      *    *IN03 _  Exit.                                                                           
+      *    *IN05 _  RÈafficher.                                                                     
+      *    *IN12 _  Annuler.                                                                        
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  Constitution des variables:                                                                
+      *                                                                                             
+      *    $VAR   _  Variable Ècran.                                                                
+      *    £VAR   _  Variable programme.                                                            
+      *    VAR    _  Variable fichier.                                                              
+      *                                                                                             
+      *=========================================================================                    
+     H DATEDIT(*DMY)                                                                                
+      *                                                                                             
+      * Fichier paramËtres.                                                                         
+      *                                                                                             
+     FCPPAR01   IF   E           K DISK                                                             
+      *                                                                                             
+      * Fichier message.                                                                            
+      *                                                                                             
+     FAFMSG02L  IF   E           K DISK                                                             
+      *                                                                                             
+      * DSPF.                                                                                       
+      *                                                                                             
+     FCP1032FM  CF   E             WORKSTN INFDS(INFO)                                              
+      *                                                                                             
+      *=========================================================================                    
+     D MSG             S             79    DIM(2) CTDATA PERRCD(1)                                  
+      *=========================================================================                    
+      *                                                                                             
+     D QDSPGM         SDS                                                                           
+     D  £PRG                   1     10                                                             
+     D  £USR                 254    263                                                             
+      *                                                                                             
+     D INFO            DS                                                                           
+     D  £XY                  370    371B 0                                                          
+      *                                                                                             
+     D                 DS                                                                           
+     D  £INT                   1     79                                                             
+     D  £SINT                  9     12                                                             
+      *                                                                                             
+      * LDA.                                                                                        
+      *                                                                                             
+     D                UDS                                                       CP2010              
+     D  ‡SOC                 350    351                                         CP2010              
+     D  ‡LSOC                352    366                                         CP2010              
+      *                                                                                             
+      *=========================================================================                    
+      * TRAITEMENT.                                                                                 
+      *=========================================================================                    
+      *                                                                                             
+      * Gestion zone message.                                                                       
+      *                                                                                             
+     C                   EXSR      ‡MSG                                                             
+     C                   MOVEL     £INT          $M                                                 
+      *                                                                                             
+      * Affichage de l'Ècran.                                                                       
+      *                                                                                             
+     C                   EXFMT     ECRAN1                                                           
+      *                                                                                             
+     C     £IN30         IFEQ      *ON                                          -+                  
+     C                   MOVE      £IN30         *IN30                           !                  
+     C                   MOVE      *OFF          £IN30                           !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Traitement touches de fonction, touche ENTREE.                                              
+      *                                                                                             
+     C                   SELECT                                                 -+                  
+      *                                                     !                                       
+      * F1=Aide                                             !                                       
+      *                                                     !                                       
+     C     *IN01         WHENEQ    *ON                                           *                  
+     C                   CALL      'AFHELP'                                      !                  
+     C                   PARM                    £PRG                            !                  
+     C                   PARM      'E1'          £FMT              2             !                  
+      *                                                     !                                       
+      * F2=Erreur                                           !                                       
+      *                                                     !                                       
+     C     *IN02         WHENEQ    *ON                                           *                  
+     C                   Z-ADD     9996          £MSG                            !                  
+      *                                                     !                                       
+      * F3=Exit.                                            !                                       
+      *                                                     !                                       
+     C     *IN03         WHENEQ    *ON                                           *                  
+     C                   SETON                                        LR         !                  
+      *                                                     !                                       
+      * F4=Invite.                                          !                                       
+      *                                                     !                                       
+     C     *IN04         WHENEQ    *ON                                           *                  
+     C                   EXSR      ‡F4                                           !                  
+      *                                                     !                                       
+      * F5=RÈafficher.                                      !                                       
+      *                                                     !                                       
+     C     *IN05         WHENEQ    *ON                                           *                  
+      *                                                     !                                       
+      * F15=Options d'Èdition.                              !                                       
+      *                                                     !                                       
+     C     *IN15         WHENEQ    *ON                                           *                  
+     C                   EXSR      ‡F15                                          !                  
+      *                                                     !                                       
+      * F21=QUSCMDLN                                        !                                       
+      *                                                     !                                       
+     C     *IN21         WHENEQ    *ON                                           *                  
+     C                   CALL      'QUSCMDLN'                                    !                  
+      *                                                     !                                       
+      * F22=DSPOBJD.                                        !                                       
+      *                                                     !                                       
+     C     *IN22         WHENEQ    *ON                                           *                  
+     C                   CALL      'AFRENSPG'                                    !                  
+     C                   PARM                    QDSPGM                          !                  
+      *                                                     !                                       
+      * Sinon contrÙle des saisies.                         !                                       
+      *                                                     !                                       
+     C                   OTHER                                                   *                  
+     C                   EXSR      ‡ENTER                                        !                  
+     C                   ENDSL                                                  -+                  
+      *                                                                                             
+      *=========================================================================                    
+      * *INZSR:                                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     *INZSR        BEGSR                                                                      
+      *                                                                                             
+      * Description de la clÈ CPPAR01.                                                              
+      *                                                                                             
+     C     £KPRM         KLIST                                                                      
+     C                   KFLD                    PRSOCI                                             
+     C                   KFLD                    PRNUMT                                             
+     C                   KFLD                    PRTYPT                                             
+     C                   KFLD                    PRARGU                                             
+      *                                                                                             
+      * Description de la clÈ AFMSG02L.                                                             
+      *                                                                                             
+     C     £KMSG         KLIST                                                                      
+     C                   KFLD                    £FIL             10                                
+     C                   KFLD                    £MSG              4 0                              
+      *                                                                                             
+      * Initialisation clÈ de OLMSG02L.                                                             
+      *                                                                                             
+     C                   MOVE      *BLANK        £FIL                                               
+     C                   MOVEL     'ERRMSG  '    £FIL                                               
+     C                   MOVE      '  '          £FIL                                               
+      *                                                                                             
+      * Extraction pÈriode comptable.                                                               
+      *                                                                                             
+     C                   CALL      'CL1013C'                                                        
+     C                   PARM                    ‡SOC                                               
+     C                   PARM                    ‡DEB              6                                
+     C                   PARM                    ‡FIN              6                                
+     C                   PARM      *OFF          ‡RET2             1                                
+     C     ‡RET2         IFEQ      *OFF                                         -+                  
+     C                   MOVEL     ‡DEB          $EXO                            !                  
+     C                   MOVE      '/       '    $EXO                            !                  
+     C                   MOVE      ‡FIN          $EXO                            !                  
+     C                   ELSE                                                    *                  
+     C                   MOVEL(P)  '????????'    $EXO                            !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      * Initialisation variables.                                                                   
+      *                                                                                             
+     C                   MOVEL     *DATE         £UDATE                                             
+     C                   MOVEL     '99'          $SEC2                                              
+     C                   MOVEL     '99'          $PRO2                                              
+     C                   MOVEL     '9'           $TYP2                                              
+     C                   MOVEL     *BLANKS       $LIGN                                              
+     C                   MOVE      *ON           £IN30             1                                
+      *                                                                                             
+      * Initialisation Format.                                                                      
+      *                                                                                             
+     C                   EXSR      ‡FMT                                                             
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡F4: invite                                                                                 
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡F4           BEGSR                                                                      
+      *                                                                                             
+      * Initialisation des indicateurs.                                                             
+      *                                                                                             
+     C                   MOVEA     *OFF          *IN(80)                                            
+      *                                                                                             
+     C                   SELECT                                                 --+                 
+      *                                                      !                                      
+      * Invite sur Service 1.                                !                                      
+      *                                                      !                                      
+     C     $FMT          WHENEQ    'E1'                                           *                 
+     C     $ZON          ANDEQ     '$SEC1'                                        !                 
+      *                                                      !                                      
+     C                   MOVEL     '28'          ‡TAB              2              !                 
+     C                   EXSR      ‡INTE2                                         !                 
+      *                                                      !                                      
+     C     ‡ARG          IFNE      *BLANKS                                      -+!                 
+     C                   MOVEL     ‡ARG          $SEC1                           !!                 
+     C                   MOVE      *ON           £IN30                           !!                 
+     C                   SETON                                        81         !!                 
+     C                   ELSE                                                    *!                 
+     C                   SETON                                        80         !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+      * Invite sur Service 2.                                !                                      
+      *                                                      !                                      
+     C     $FMT          WHENEQ    'E1'                                           *                 
+     C     $ZON          ANDEQ     '$SEC2'                                        !                 
+      *                                                      !                                      
+     C                   MOVEL     '28'          ‡TAB                             !                 
+     C                   EXSR      ‡INTE2                                         !                 
+      *                                                      !                                      
+     C     ‡ARG          IFNE      *BLANKS                                      -+!                 
+     C                   MOVEL     ‡ARG          $SEC2                           !!                 
+     C                   MOVE      *ON           £IN30                           !!                 
+     C                   SETON                                        82         !!                 
+     C                   ELSE                                                    *!                 
+     C                   SETON                                        81         !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+      * Invite sur Produit 1.                                !                                      
+      *                                                      !                                      
+     C     $FMT          WHENEQ    'E1'                                           *                 
+     C     $ZON          ANDEQ     '$PRO1'                                        !                 
+      *                                                      !                                      
+     C                   MOVEL     '29'          ‡TAB                             !                 
+     C                   EXSR      ‡INTE2                                         !                 
+      *                                                      !                                      
+     C     ‡ARG          IFNE      *BLANKS                                      -+!                 
+     C                   MOVEL     ‡ARG          $PRO1                           !!                 
+     C                   MOVE      *ON           £IN30                           !!                 
+     C                   SETON                                        83         !!                 
+     C                   ELSE                                                    *!                 
+     C                   SETON                                        82         !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+      * Invite sur Service 2.                                !                                      
+      *                                                      !                                      
+     C     $FMT          WHENEQ    'E1'                                           *                 
+     C     $ZON          ANDEQ     '$PRO2'                                        !                 
+      *                                                      !                                      
+     C                   MOVEL     '29'          ‡TAB                             !                 
+     C                   EXSR      ‡INTE2                                         !                 
+      *                                                      !                                      
+     C     ‡ARG          IFNE      *BLANKS                                      -+!                 
+     C                   MOVEL     ‡ARG          $PRO2                           !!                 
+     C                   MOVE      *ON           £IN30                           !!                 
+     C                   SETON                                        84         !!                 
+     C                   ELSE                                                    *!                 
+     C                   SETON                                        83         !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+      * Invite sur Type1.                                    !                                      
+      *                                                      !                                      
+     C     $FMT          WHENEQ    'E1'                                           *                 
+     C     $ZON          ANDEQ     '$TYP1'                                        !                 
+      *                                                      !                                      
+     C                   MOVEL     '30'          ‡TAB                             !                 
+     C                   EXSR      ‡INTE2                                         !                 
+      *                                                      !                                      
+     C     ‡ARG          IFNE      *BLANKS                                      -+!                 
+     C                   MOVEL     ‡ARG          $TYP1                           !!                 
+     C                   MOVE      *ON           £IN30                           !!                 
+     C                   SETON                                        85         !!                 
+     C                   ELSE                                                    *!                 
+     C                   SETON                                        84         !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+      * Invite sur Type 2.                                   !                                      
+      *                                                      !                                      
+     C     $FMT          WHENEQ    'E1'                                           *                 
+     C     $ZON          ANDEQ     '$TYP2'                                        !                 
+      *                                                      !                                      
+     C                   MOVEL     '30'          ‡TAB                             !                 
+     C                   EXSR      ‡INTE2                                         !                 
+      *                                                      !                                      
+     C     ‡ARG          IFNE      *BLANKS                                      -+!                 
+     C                   MOVEL     ‡ARG          $TYP2                           !!                 
+     C                   MOVE      *ON           £IN30                           !!                 
+     C                   SETON                                        86         !!                 
+     C                   ELSE                                                    *!                 
+     C                   SETON                                        85         !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   OTHER                                                    *                 
+     C                   Z-ADD     5             £MSG                             !                 
+     C                   ENDSL                                                  --+                 
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡ENTER = Gestion de la touche ENTREE.                                                       
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡ENTER        BEGSR                                                                      
+      *                                                                                             
+      * Initialisation des indicateurs.                                                             
+      *                                                                                             
+     C                   MOVEA     *OFF          *IN(60)                                            
+      *                                                                                             
+      *  $TYP.                                                                                      
+      *                                                                                             
+     C     $TYP1         IFGT      $TYP2                                        -+                  
+     C                   Z-ADD     1008          £MSG                            !                  
+     C                   SETON                                        64         !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     $TYP1         IFEQ      $TYP2                                        --+                 
+     C                   MOVEL     ‡SOC          PRSOCI                           !                 
+     C                   MOVEL     'L'           PRTYPT                           !                 
+     C                   Z-ADD     30            PRNUMT                           !                 
+     C                   MOVEL(P)  $TYP1         PRARGU                           !                 
+     C     £KPRM         CHAIN     CPPAR01                            64          !                 
+      *                                                      !                                      
+     C     *IN64         IFEQ      *ON                                          -+!                 
+     C                   Z-ADD     1009          £MSG                            !!                 
+     C                   ENDIF                                                  -+!                 
+     C                   ENDIF                                                  --+                 
+      *                                                                                             
+      * Controle type de produit.                                                                   
+      *                                                                                             
+     C     $PRO1         IFGT      $PRO2                                        -+                  
+     C                   Z-ADD     1008          £MSG                            !                  
+     C                   SETON                                        62         !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     $PRO1         IFEQ      $PRO2                                        --+                 
+     C                   MOVEL     ‡SOC          PRSOCI                           !                 
+     C                   MOVEL     'L'           PRTYPT                           !                 
+     C                   Z-ADD     29            PRNUMT                           !                 
+     C                   MOVEL(P)  $PRO1         PRARGU                           !                 
+     C     £KPRM         CHAIN     CPPAR01                            62          !                 
+      *                                                      !                                      
+     C     *IN62         IFEQ      *ON                                          -+!                 
+     C                   Z-ADD     1009          £MSG                            !!                 
+     C                   ENDIF                                                  -+!                 
+      *                                                      !                                      
+     C                   ENDIF                                                  --+                 
+      *                                                                                             
+      *  $SER.                                                                                      
+      *                                                                                             
+     C     $SEC1         IFGT      $SEC2                                        -+                  
+     C                   Z-ADD     162           £MSG                            !                  
+     C                   SETON                                        60         !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     $SEC1         IFEQ      $SEC2                                        --+                 
+     C                   MOVEL     ‡SOC          PRSOCI                           !                 
+     C                   MOVEL     'L'           PRTYPT                           !                 
+     C                   Z-ADD     28            PRNUMT                           !                 
+     C                   MOVEL(P)  $SEC1         PRARGU                           !                 
+     C     £KPRM         CHAIN     CPPAR01                            60          !                 
+      *                                                      !                                      
+     C     *IN60         IFEQ      *ON                                          -+!                 
+     C                   Z-ADD     1009          £MSG                            !!                 
+     C                   ENDIF                                                  -+!                 
+     C                   ENDIF                                                  --+                 
+      *                                                                                             
+     C     £MSG          IFEQ      *ZERO                                        -+                  
+     C     *IN30         ANDEQ     *ON                                           !                  
+     C                   Z-ADD     2505          £MSG                            !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C     £MSG          IFEQ      *ZERO                                        -+                  
+     C     *IN30         ANDEQ     *OFF                                          !                  
+      *                                                     !                                       
+     C                   MOVEL     $SEC1         ‡SEC1             2             !                  
+     C                   MOVEL     $SEC2         ‡SEC2             2             !                  
+     C                   MOVEL     $PRO1         ‡PRO1             2             !                  
+     C                   MOVEL     $PRO2         ‡PRO2             2             !                  
+     C                   MOVEL     $TYP1         ‡TYP1             1             !                  
+     C                   MOVEL     $TYP2         ‡TYP2             1             !                  
+     C                   MOVEL     $LIGN         ‡LIGN             3             !                  
+      *                                                     !                                       
+      * ContrÙle option d'Èdition renseignÈes.              !                                       
+      *                                                     !                                       
+     C                   CALL      'AFEDIT2'                                     !                  
+     C                   PARM      'CP1032P'     ‡PRTF                           !                  
+      *                                                     !                                       
+     C                   CALL      'CL1032C1'                                    !                  
+     C                   PARM                    ‡SOC                            !                  
+     C                   PARM                    ‡SEC1                           !                  
+     C                   PARM                    ‡SEC2                           !                  
+     C                   PARM                    ‡PRO1                           !                  
+     C                   PARM                    ‡PRO2                           !                  
+     C                   PARM                    ‡TYP1                           !                  
+     C                   PARM                    ‡TYP2                           !                  
+     C                   PARM                    ‡LIGN                           !                  
+     C                   SETON                                        LR         !                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡FMT: Initialisation du format.                                                             
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡FMT          BEGSR                                                                      
+      *                                                                                             
+     C                   MOVEL     ‡SOC          PRSOCI                                             
+     C                   Z-ADD     60            PRNUMT                                             
+     C                   MOVE      'L'           PRTYPT                                             
+     C                   MOVEL(P)  'LIB01'       PRARGU                                             
+     C     £KPRM         CHAIN     CPPAR01                            99                            
+     C   99              MOVEL     MSG(2)        $LIB01                                             
+     C  N99              MOVEL     PRLIBT        $LIB01                                             
+      *                                                                                             
+     C                   MOVEL(P)  'LIB02'       PRARGU                                             
+     C     £KPRM         CHAIN     CPPAR01                            99                            
+     C   99              MOVEL     MSG(2)        $LIB02                                             
+     C  N99              MOVEL     PRLIBT        $LIB02                                             
+      *                                                                                             
+     C                   MOVEL(P)  'LIB03'       PRARGU                                             
+     C     £KPRM         CHAIN     CPPAR01                            99                            
+     C   99              MOVEL     MSG(2)        $LIB03                                             
+     C  N99              MOVEL     PRLIBT        $LIB03                                             
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡MSG = Chargement des zones messages.                                                       
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡MSG          BEGSR                                                                      
+      *                                                                                             
+     C     £MSG          IFEQ      *ZERO                                        -+                  
+     C                   Z-ADD     9999          £MSG                            !                  
+     C                   ENDIF                                                  -+                  
+     C     £KMSG         CHAIN     AFMSG02L                           50                            
+     C     *IN50         IFEQ      *OFF                                         -+                  
+     C                   MOVE      INTMSG        £INT                            !                  
+     C                   ELSE                                                    *                  
+     C                   MOVE      MSG(1)        £INT                            !                  
+     C                   MOVE      £MSG          £SINT                           !                  
+     C                   ENDIF                                                  -+                  
+     C                   Z-ADD     *ZERO         £MSG                                               
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡F15:                                                                                       
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡F15          BEGSR                                                                      
+     C                   CALL      'AFEDIT1'                                                        
+     C                   PARM      'CP1032P'     ‡PRTF            10                                
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡INTE2: invite                                                                              
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡INTE2        BEGSR                                                                      
+      *                                                                                             
+     C                   MOVEL     *BLANKS       ‡ARG              7                                
+     C                   MOVEL     *OFF          ‡BOL              1                                
+      *                                                                                             
+     C                   CALL      'AFP1052C'                                                       
+     C                   PARM                    ‡SOC                                               
+     C                   PARM                    ‡TAB                                               
+     C                   PARM      *BLANKS       ‡ARG                                               
+     C                   PARM      *OFF          ‡BOL                                               
+     C                   PARM      *BLANKS       ‡LIB             30                                
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *====================================================                                         
+**                                                                                                  
+Message XXXX de type ERRMSG non trouvÈ.                                                             
+LibellÈ Non dÈfini . . . . .                                                                        

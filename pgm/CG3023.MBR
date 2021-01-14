@@ -1,0 +1,341 @@
+      *=========================================================================                    
+      *                                                                                             
+      *   Edition du brouillard des A Nouveaux.                                                     
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  DÈtail des indicateurs utilisÈs.                                                           
+      *                                                                                             
+      *    *IN01 _  Aide.                                                                           
+      *    *IN02 _  Touche de fonction incorrecte.                                                  
+      *    *IN03 _  Exit.                                                                           
+      *    *IN04 _  Invite.                                                                         
+      *    *IN05 _  RÈafficher.                                                                     
+      *    *IN12 _  Annuler.                                                                        
+      *    *IN21 _  QUSCMDLN.                                                                       
+      *    *IN22 _  DSPOBJD.                                                                        
+      *    *IN28 _  ROLLUP.                                                                         
+      *    *IN28 _  ROLLDOWN.                                                                       
+      *                                                                                             
+      *=========================================================================                    
+      *                                                                                             
+      *  Constitution des variables:                                                                
+      *                                                                                             
+      *     VAR   _  Variable fichier.                                                              
+      *    ‡VAR   _  Variable paramËtre.                                                            
+      *    $VAR   _  Variable Ècran.                                                                
+      *    £VAR   _  Variable programme.                                                            
+      *                                                                                             
+      *=========================================================================                    
+     H DATEDIT(*DMY)                                                                                
+      *                                                                                             
+      * Fichier Ècritures.                                                                          
+      *                                                                                             
+     FAFMVTJOU  IPE  F  602        DISK                                         CG3022              
+      *                                                                                             
+      * Fichier Plan comptable.                                                                     
+      *                                                                                             
+     FCPPLG01   IF   E           K DISK                                         CG3022              
+      *                                                                                             
+      * Fichier ParamËtres.                                                                         
+      *                                                                                             
+     FCPPAR01   IF   E           K DISK                                         CG3022              
+      *                                                                                             
+      * Fichier Etat.                                                                               
+      *                                                                                             
+     FCP9020P   O    F  132        PRINTER OFLIND(*INOF)                        CG3022              
+      *                                                                                             
+      *=========================================================================                    
+     D TL1             S             66    DIM(4) CTDATA PERRCD(1)                                  
+     D TL2             S             66    DIM(6) CTDATA PERRCD(1)                                  
+     D                UDS                                                       CG3022              
+     D  ZCDEB                458    465  0                                                          
+     D  ZCFIN                466    473  0                                                          
+     D                 DS                                                       CG3022              
+     D  DSPL01                 1      9                                         CG3022              
+     D  DSPL02                10     15                                         CG3022              
+     D  DSKPLG                 1     15                                         CG3022              
+     D                 DS                                                       CG3022              
+     D  DSPA01                 1      5                                         CG3022              
+     D  DSPA02                 6     12                                         CG3022              
+     D  DSKPAR                 1     12                                         CG3022              
+      *=========================================================================                    
+      *                                                                                             
+     IAFMVTJOU  AA  01                                                          CG3022              
+     I                                  3    4 0CODSOC                          CG3022              
+     I                                  9   11  CODJOU        L3                CG3022              
+     I                                 16   23 0DATCPT                          CG3022              
+     I                                 20   21 0MMCPT                           CG3022              
+     I                                 24   31 0DATPIE                          CG3022              
+     I                                 24   27 0AAPIE                           CG3022              
+     I                                 28   29 0MMPIE                           CG3022              
+     I                                 30   31 0JJPIE                           CG3022              
+     I                                 32   39 0DATECH                          CG3022              
+     I                                 32   35 0AAECH                           CG3022              
+     I                                 36   37 0MMECH                           CG3022              
+     I                                 38   39 0JJECH                           CG3022              
+     I                                 40   47 0DATEVE                          CG3022              
+     I                                 48   49 0CPTCLA        L2                CG3022              
+     I                                 48   54 0CPTGED        L1                CG3022              
+     I                                 55   60 0SCPGED        L1                CG3022              
+     I                                 67   68 0CPTETS                          CG3022              
+     I                                 69   70 0CPTSER                          CG3022              
+     I                                 71   71 0CPTTYP                          CG3022              
+     I                                 73   79 0NUMPIE                          CG3022              
+     I                                 80   86 0REFLET                          CG3022              
+     I                             P   88   93 2MTDEBI                          CG3022              
+     I                             P   94   99 2MTCRDI                          CG3022              
+     I                                100  129  LIBELD                          CG3022              
+      *                                                                                             
+      *=========================================================================                    
+      * TRAITEMENT                                                                                  
+      *=========================================================================                    
+      *                                                                                             
+     C                   MOVE      *OFF          *IN99                                              
+     C     *IN98         IFEQ      *OFF                                                             
+     C                   MOVEA     '11'          *IN(98)                                            
+     C                   END                                                                        
+      *                                                                                             
+      *=========================================================================                    
+      * LIBELLE JOURNAL.                                                                            
+      *=========================================================================                    
+      *                                                                                             
+     C     *INL3         IFEQ      *ON                                          --+                 
+     C                   MOVEL     ‡SOC          PRSOCI                           !                 
+     C                   Z-ADD     03            PRNUMT                           !                 
+     C                   MOVE      'L'           PRTYPT                           !                 
+     C                   MOVEL(P)  CODJOU        PRARGU                           !                 
+     C     £KPRM1        CHAIN     CPPAR01                            50          !                 
+     C     *IN50         IFEQ      *ON                                          -+!                 
+     C                   MOVEL(P)  'Erreur'      LIBJOU           15             !!                 
+     C                   ELSE                                                    *!                 
+     C                   MOVEL     PRLIBT        LIBJOU                          !!                 
+     C                   ENDIF                                                  -+!                 
+     C                   ENDIF                                                  --+                 
+      *                                                                                             
+      *=========================================================================                    
+      * RUPTURE L2.                                                                                 
+      *=========================================================================                    
+      *                                                                                             
+     C     *INL2         IFEQ      *ON                                                              
+     C                   Z-ADD     0             TDEBI            12 2                         CG302
+     C                   Z-ADD     0             TCRDI            12 2                         CG302
+     C                   END                                                                        
+      *                                                                                             
+      *=========================================================================                    
+      * RUPTURE L1.                                                                                 
+      *=========================================================================                    
+      *                                                                                             
+     C     *INL1         IFEQ      *ON                                                              
+     C                   MOVEL     CPTGED        £CPT                                               
+     C                   MOVEL     SCPGED        £SCP                                               
+     C     £KPLG1        CHAIN     CPPLG01                            50                            
+     C     *IN50         IFEQ      *ON                                          -+                  
+     C                   MOVEL(P)  'Erreur'      LIBCPT           30             !                  
+     C                   ELSE                                                    *                  
+     C                   MOVEL     PCGLIB        LIBCPT                          !                  
+     C                   ENDIF                                                  -+                  
+     C                   ENDIF                                                  -+                  
+      *                                                                                             
+      *=========================================================================                    
+      * INVERSION DE DATES.                                                                         
+      *=========================================================================                    
+      *                                                                                             
+     C                   MOVE      MMPIE         ZON4              4 0                         CG302
+     C                   MOVEL     JJPIE         ZON4                                          CG302
+     C                   MOVEL     ZON4          DATPIE            8 0                         CG302
+     C                   MOVE      AAPIE         DATPIE                                        CG302
+      *                                                                                             
+     C                   MOVE      MMECH         ZON4                                          CG302
+     C                   MOVEL     JJECH         ZON4                                          CG302
+     C                   MOVEL     ZON4          DATECH            8 0                         CG302
+     C                   MOVE      AAECH         DATECH                                        CG302
+      *                                                                                             
+      * TOTALISATION.                                                                               
+      *                                                                                             
+     C                   ADD       MTDEBI        TDEB             12 2                         CG302
+     C                   ADD       MTCRDI        TCRE             12 2                         CG302
+      *                                                                                             
+     CL1                 ADD       TDEB          TDEBI                                         CG302
+     CL1                 ADD       TCRE          TCRDI                                         CG302
+     CL1   TDEB          SUB       TCRE          TOTL1            12 2                         CG302
+      *                                                                                             
+     CL2                 ADD       TDEBI         DEBGEN           12 2                         CG302
+     CL2                 ADD       TCRDI         CREGEN           12 2                         CG302
+     CL2   TDEBI         SUB       TCRDI         TOTL2            12 2                         CG302
+      *                                                                                             
+     CLR   DEBGEN        SUB       CREGEN        SOLGEN           12 2                         CG302
+      *                                                                                             
+      *=========================================================================                    
+      * *INZSR: initialisation.                                                                     
+      *=========================================================================                    
+      *                                                                                             
+     C     *INZSR        BEGSR                                                                      
+      *                                                                                             
+      * RÈception paramËtres.                                                                       
+      *                                                                                             
+     C     *ENTRY        PLIST                                                                      
+     C                   PARM                    ‡SOC              2                                
+     C                   PARM                    ‡DTDE             8                                
+     C                   PARM                    ‡DTFI             8                                
+      *                                                                                             
+      * Description de la clÈ de CPPAR01.                                                           
+      *                                                                                             
+     C     £KPRM1        KLIST                                                                      
+     C                   KFLD                    PRSOCI                                             
+     C                   KFLD                    PRNUMT                                             
+     C                   KFLD                    PRTYPT                                             
+     C                   KFLD                    PRARGU                                             
+      *                                                                                             
+      * Description de la clÈ de CPPLG01.                                                           
+      *                                                                                             
+     C     £KPLG1        KLIST                                                                      
+     C                   KFLD                    ‡SOC                                               
+     C                   KFLD                    £CPT              7 0                              
+     C                   KFLD                    £SCP              6 0                              
+      *                                                                                             
+      * Initialisation variables.                                                                   
+      *                                                                                             
+     C                   MOVEL     *DATE         £UDATE            8 0                              
+     C                   TIME                    W1TIME            6 0                              
+      *                                                                                             
+     C                   MOVEL     ‡DTDE         £DAT                                               
+     C                   EXSR      ‡CVTE                                                            
+     C                   MOVEL     £DAT          £DTDE             8 0                              
+      *                                                                                             
+     C                   MOVEL     ‡DTFI         £DAT                                               
+     C                   EXSR      ‡CVTE                                                            
+     C                   MOVEL     £DAT          £DTFI             8 0                              
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+      * ‡CVTE:                                                                                      
+      *=========================================================================                    
+      *                                                                                             
+     C     ‡CVTE         BEGSR                                                                      
+      *                                                                                             
+     C                   CALL      'CVTD2000'                                                       
+     C                   PARM      £DAT          ‡DATS             8                                
+     C                   PARM      '*YYMD'       ‡FMTS            10                                
+     C                   PARM      '*DMYY'       ‡FMTC            10                                
+     C                   PARM      *BLANK        ‡DATC             8                                
+     C                   PARM      '0'           ‡RET2             1                                
+     C                   MOVEL     ‡DATC         £DAT              8                                
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *=========================================================================                    
+     OCP9020P   H    99                     1 01                                C2010A              
+     O         OR    OF                                                         C2010A              
+     O                       TL1(1)              66                                                 
+     O                       TL1(1)             132                                                 
+     O          H    99                     0                                                       
+     O         OR    OF                                                                             
+     O                       TL1(3)              66                                                 
+     O                       TL1(4)             132                                                 
+     O                       £UDATE             123 '  /  /    '                                    
+     O                       W1TIME             132 '0 :  :  '                                      
+     O          H    99                  0  1                                                       
+     O         OR    OF                                                                             
+     O                       TL1(3)              66                                                 
+     O                       TL1(4)             132                                                 
+     O                       ‡SOC                 2                             C2010A              
+     O          H    99                     0                                                       
+     O         OR    OF                                                                             
+     O                                            8 'CG3023  '                                      
+     O                                           48 'Journal'                                       
+     O                       CODJOU              52                             CG3022              
+     O                       LIBJOU              68                             CG3022              
+     O                                           73 'Date'                      CG3022              
+     O                       £DTDE               84 '  /  /    '                CG3022              
+     O                                           87 'au'                        CG3022              
+     O                       £DTFI               98 '  /  /    '                CG3022              
+     O          H    99                     1                                                       
+     O         OR    OF                                                                             
+     O                       CODJOU              52                             CG3022              
+     O                       £DTDE               84 '  /  /    '                CG3022              
+     O                       £DTFI               98 '  /  /    '                CG3022              
+     O          H    99                     2                                                       
+     O         OR    OF                                                                             
+     O                       TL1(1)              66                                                 
+     O                       TL1(2)             132                                                 
+     O                       PAGE          Z    132                                                 
+     O          H    99                     1                                   CG3022              
+     O         OR    OF                                                         CG3022              
+     O                       TL2(1)              66                                                 
+     O                       TL2(2)             132                                                 
+     O          H    99                     1                                   CG3022              
+     O         OR    OF                                                         CG3022              
+     O                       TL2(3)              66                                                 
+     O                       TL2(4)             132                                                 
+     O                                           19 'Compte   S/Cpte'           CG3022              
+     O                                           30 'Analytique'                CG3022              
+     O                                           50 'LibellÈ Ecriture'          CG3022              
+     O                                           77 'DÈbit'                     CG3022              
+     O                                           97 'CrÈdit'                    CG3022              
+     O                                          116 'Solde'                     CG3022              
+     O          H    99                     1                                   CG3022              
+     O         OR    OF                                                         CG3022              
+     O                       TL2(5)              66                                                 
+     O                       TL2(6)             132                                                 
+     O          D    01                     1                                   CG3022              
+     O                       TL2(3)              66                                                 
+     O                       TL2(4)             132                                                 
+     O                       CPTGED              10                             CG3022              
+     O                       SCPGED              19                             CG3022              
+     O                       CPTETS              24                             CG3022              
+     O                       CPTSER              27                             CG3022              
+     O                       CPTTYP              29                             CG3022              
+     O                       LIBELD              64                             CG3022              
+     O                       MTDEBI        2     83                             CG3022              
+     O                       MTCRDI        2    102                             CG3022              
+     O          T    OFNL1                  1                                   CG3022              
+     O         OR    L1                                                         CG3022              
+     O                       TL2(5)              66                                                 
+     O                       TL2(6)             132                                                 
+     O          T    L1                     1                                   CG3022              
+     O                       TL2(3)              66                                                 
+     O                       TL2(4)             132                                                 
+     O                                           45 'Total Compte .'            CG3022              
+     O                       CPTGED              53                             CG3022              
+     O                       SCPGED              60                             CG3022              
+     O                       TDEB          2B    83                             CG3022              
+     O                       TCRE          2B   102                             CG3022              
+     O                       TOTL1         KB   122                             CG3022              
+     O          T    L1                     1                                   CG3022              
+     O                       TL2(3)              66                                                 
+     O                       TL2(4)             132                                                 
+     O          T    L2                     1                                   CG3022              
+     O                       TL2(3)              66                                                 
+     O                       TL2(4)             132                                                 
+     O                                           45 'Total Classe .'            CG3022              
+     O                       CPTCLA              49                             CG3022              
+     O                       TDEBI         2B    83                             CG3022              
+     O                       TCRDI         2B   102                             CG3022              
+     O                       TOTL2         KB   122                             CG3022              
+     O          T    L2                     1                                   CG3022              
+     O                       TL2(3)              66                                                 
+     O                       TL2(4)             132                                                 
+     O          T    LR                     1                                   CG3022              
+     O                       TL2(3)              66                                                 
+     O                       TL2(4)             132                                                 
+     O                                           45 'Total gÈnÈral.'            CG3022              
+     O                       DEBGEN        2B    83                             CG3022              
+     O                       CREGEN        2B   102                             CG3022              
+     O                       SOLGEN        KB   122                             CG3022              
+     O          T    LR                     1                                   CG3022              
+     O                       TL2(5)              66                                                 
+     O                       TL2(6)             132                                                 
+** TL1                                                                                              
+__________________________________________________________________                                  
+_______________________________________________________ Page                                        
+                                                        JOURNAL DE                                  
+S A NOUVEAUX                                                                                        
+** TL2                                                                                              
+*-----------------------------+----------------------------------+                                  
+------------------+------------------+------------------*                                           
+!                             !                                  !                                  
+                  !                  !                  !                                           
++-----------------------------+----------------------------------+                                  
+------------------+------------------+------------------+                                           

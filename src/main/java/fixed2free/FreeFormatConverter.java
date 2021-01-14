@@ -6268,6 +6268,8 @@ public class FreeFormatConverter extends LoggingListener {
 	}
 
 	private void fillTokenList(ParseTree parseTree, List<CommonToken> tokenList) {
+		if (parseTree == null)
+			return;
 		for (int i = 0; i < parseTree.getChildCount(); i++) {
 			ParseTree payload = parseTree.getChild(i);
 

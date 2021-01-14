@@ -1,0 +1,280 @@
+     H*---------------------------------------------------------------*                             
+     H DATEDIT(*DMY)                                                                                
+      *                                                                                             
+      * Fichier entete des O.D.                                                                     
+      *                                                                                             
+     FAFSOD01   IP   E           K DISK                                                             
+     F                                     RENAME(SODF:SOD01)                                       
+      *                                                                                             
+      * Fichier detail des O.D.                                                                     
+      *                                                                                             
+     FAFSOD00   IF   E           K DISK                                                             
+      *                                                                                             
+     F* Fichier ouverture exercice comptable année en cours.                                        
+      *                                                                                             
+     FAFPCO01E  IF   F  236    15AIDISK    KEYLOC(1)                                                
+      *                                                                                             
+     F* Fichier ouverture exercice comptable année-1.                                               
+      *                                                                                             
+     FAFPCO01A  IF   F  236    15AIDISK    KEYLOC(1)                                                
+      *                                                                                             
+      * Fichier des verouillages journaux.(A-1)                                                     
+      *                                                                                             
+     FAFCJO1LA  UF   F  232     5AIDISK    KEYLOC(1)                                                
+      *                                                                                             
+      * Fichier des verouillages journaux.(A)                                                       
+      *                                                                                             
+     FAFCJO1LE  UF   F  232     5AIDISK    KEYLOC(1)                                                
+      *                                                                                             
+      * Fichier de travail des O.D.                                                                 
+      *                                                                                             
+     FAFMVTJOR  O  A F  286        DISK                                                             
+      *                                                                                             
+      * Fichier controle Maj comptable.                                                             
+      *                                                                                             
+     FMAJCPT    IF   F    5     5AIDISK    KEYLOC(1)                                                
+      *                                                                                             
+      *****************************************************************                             
+     D NP              S              7  0 DIM(12)                                               CP3
+      *                                                                                             
+      * DS AFPCO01X                                                                                 
+      *                                                                                             
+     D                 DS                                                                           
+     D  £SOCPC                 1      2                                         CP3110              
+     D  £PER                   3     15                                         CP3110              
+     D  KPCO01                 1     15                                         CP3110              
+      *                                                                                             
+      * DS AFCJOL1X                                                                                 
+      *                                                                                             
+     D                 DS                                                                           
+     D  £SOCCJ                 1      2                                         CP3110              
+     D  £CJOU                  3      5                                         CP3110              
+     D  KCJO01                 1      5                                         CP3110              
+      *****************************************************************                             
+      *                                                                                             
+     IMAJCPT    NS                                                              CP3045              
+     I                                  1    2  MASOCI                          CP3110              
+      *                                                                                             
+     IAFPCO01E  NS                                                                                  
+     I                                 30   35 0PCPDEB                          CP3110              
+     I                                 36   41 0PCPFIN                          CP3110              
+      *                                                                                             
+     IAFPCO01A  NS                                                                                  
+     I                                 30   35 0PCPDEB                          CP3110              
+     I                                 36   41 0PCPFIN                          CP3110              
+      *                                                                                             
+     IAFCJO1LA  NS                                                                                  
+     I                             P  150  197  NP                              CP3110              
+      *                                                                                             
+     IAFCJO1LE  NS                                                                                  
+     I                             P  150  197  NP                              CP3110              
+      *                                                                                             
+     C                   Z-ADD     0             WZON11           11 0                              
+      *  Ctrl société.                                                                              
+     C                   MOVEL     SOCSTE        £MAJCP            5                                
+     C                   MOVE      'ORG'         £MAJCP                                             
+     C     £MAJCP        CHAIN     MAJCPT                             99                            
+      *                                                                                             
+      * Traitement                                                                                  
+      *                                                                                             
+     C     *IN99         IFEQ      *OFF                                         ---+                
+     C                   ADD       1             W1CPT1            5 0             !                
+     C                   Z-ADD     0             W1CPT2            5 0             !                
+     C                   MOVEL     SOCJOU        W1CJOU            3               !                
+      *          § Ctrl pour 1er passage.                     !                                     
+     C                   MOVE      *OFF          àCTRL1                            !                
+      *                                                       !                                     
+      * Positionnement dans fichier détail.                   !                                     
+      *                                                       !                                     
+     C                   Z-ADD     SONFOL        £NFOL                             !                
+     C                   Z-ADD     1             £NLIG                             !                
+      *                                                       !                                     
+     C     KSOD00        SETLL     AFSOD00                                         !                
+      *                                                       !                                     
+     C                   READ      AFSOD00                                95       !                
+      *                                                       !                                     
+     C     *IN95         DOWEQ     *OFF                                         --+!                
+     C     SOCSTE        ANDEQ     MASOCI                                         !!                
+     C     SONFOL        ANDEQ     £NFOL                                          !!                
+      *                                                      !!                                     
+     C                   Z-ADD     SOMDEB        £DEBI            11 2            !!                
+     C                   Z-ADD     SOMCRE        £CRDI            11 2            !!                
+     C     SOCDEP        IFNE      *BLANKS                                      -+!!                
+     C                   MOVEL     SOCDEP        £DEP              1             !!!                
+     C                   ELSE                                                    *!!                
+     C                   MOVEL     ' '           £DEP                            !!!                
+     C                   ENDIF                                                  -+!!                
+     C                   ADD       1             W1CPT2                           !!                
+      * Ctrl si lettrage.                                    !!                                     
+     C                   MOVEL     *BLANKS       W1DCPT            6              !!                
+     C     SOLETT        IFEQ      '****'                                       -+!!                
+     C     SOLETT        OREQ      'P***'                                        !!!                
+     C                   MOVEL     SODCPT        W1DCPT                          !!!                
+     C                   ENDIF                                                  -+!!                
+      * Ctrl si écriture d'escompte.                         !!                                     
+     C     *INU7         IFEQ      *OFF                                         -+!!                
+     C     SOCJOU        ANDNE     W1CJOU                                        !!!                
+     C     SOLETR        ANDNE     'O'                                           !!!                
+     C     SOLETR        ANDNE     'N'                                           !!!                
+      *                                                     !!!                                     
+     C                   EXSR      àNPIE                                         !!!                
+     C                   ELSE                                                    *!!                
+      *          § Ctrl pour passages suivant.              !!!                                     
+     C                   MOVE      *OFF          àCTRL1                          !!!                
+     C                   ENDIF                                                  -+!!                
+      *                                                      !!                                     
+     C                   Z-ADD     *ZEROS        W1REGR            1 0            !!                
+     C                   MOVEL     SOCOCG        W1COCG            2 0            !!                
+     C     SOFIL3        IFEQ      'O'                                          -+!!                
+     C     W1COCG        ANDEQ     51                                            !!!                
+     C                   Z-ADD     1             W1REGR                          !!!                
+     C                   ENDIF                                                  -+!!                
+      *                                                      !!                                     
+     C                   EXCEPT    £MJDA1                                         !!                
+     C                   READ      AFSOD00                                95      !!                
+      *                                                      !!                                     
+     C                   ENDDO                                                  --+!                
+      *                                                       !                                     
+     C                   ENDIF                                                  ---+                
+      *                                                                                             
+      *****************************************************************                             
+      * *INZSR:                                                                                     
+      *****************************************************************                             
+      *                                                                                             
+     C     *INZSR        BEGSR                                                                      
+      *                                                                                             
+      * Description Clé AFSOD00.                                                                    
+      *                                                                                             
+     C     KSOD00        KLIST                                                                      
+     C                   KFLD                    MASOCI                         =Société.           
+     C                   KFLD                    £NFOL             7 0          =Date compt.        
+     C                   KFLD                    £NLIG             3 0          =Compte.            
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      *****************************************************************                             
+      * àNPIE:                                                                                      
+      *****************************************************************                             
+      *                                                                                             
+     C     àNPIE         BEGSR                                                                      
+      *                                                                                             
+     C     àCTRL1        IFEQ      *OFF                                         ---+                
+     C                   MOVEL     SOCSTE        £SOCPC                            !                
+     C                   MOVEL     SOCSTE        £SOCCJ                            !                
+      *                                                       !                                     
+      * Ctrl exercice.                                        !                                     
+      *                                                       !                                     
+     C                   MOVEL     *ZEROS        £PER                              !                
+     C                   MOVEL     SODCPT        W1AAMM            6 0             !                
+     C     KPCO01        CHAIN     AFPCO01E                           91           !                
+      *          § Exercice en cours                          !                                     
+     C     *IN91         IFEQ      *OFF                                         -+ !                
+     C     W1AAMM        ANDGE     PCPDEB                                        ! !                
+     C     W1AAMM        ANDLE     PCPFIN                                        ! !                
+     C                   MOVE      *ON           *IN41                           ! !                
+     C                   ENDIF                                                  -+ !                
+      *                                                       !                                     
+     C     KPCO01        CHAIN     AFPCO01A                           91           !                
+      *          § Exercice N-1                               !                                     
+     C     *IN91         IFEQ      *OFF                                         -+ !                
+     C     W1AAMM        ANDGE     PCPDEB                                        ! !                
+     C     W1AAMM        ANDLE     PCPFIN                                        ! !                
+     C                   MOVE      *OFF          *IN41                           ! !                
+     C                   ENDIF                                                  -+ !                
+      *                                                       !                                     
+      * Recherche du numéro de pièce.                         !                                     
+      *                                                       !                                     
+     C                   MOVE      SOCJOU        £CJOU                             !                
+     C     *IN41         IFEQ      *ON                                          -+ !                
+      *          § Exercice en cours                        ! !                                     
+     C     KCJO01        CHAIN     AFCJO1LE                           91         ! !                
+     C                   ELSE                                                    * !                
+      *          § Exercice N-1                             ! !                                     
+     C     KCJO01        CHAIN     AFCJO1LA                           91         ! !                
+     C                   ENDIF                                                  -+ !                
+      *                                                       !                                     
+     C     *IN91         IFEQ      *OFF                                         --+!                
+     C                   Z-ADD     W1AAMM        £MM               2 0            !!                
+     C                   MOVEL     W1AAMM        £AA               4 0            !!                
+      *                                                      !!                                     
+     C     NP(£MM)       IFEQ      *ZEROS                                       -+!!                
+     C                   MOVE      £AA           WZA001            1 0           !!!                
+     C                   MOVEL     WZA001        WZA003            3 0           !!!                
+     C                   MOVE      £MM           WZA003                          !!!                
+     C                   MOVEL     WZA003        NP(£MM)                         !!!                
+     C                   ENDIF                                                  -+!!                
+      *                                                      !!                                     
+     C                   ADD       1             NP(£MM)                          !!                
+     C                   Z-ADD     NP(£MM)       SONPIE                           !!                
+      *                                                      !!                                     
+     C     *IN41         IFEQ      *ON                                          -+!!                
+      *          § Exercice en cours                        !!!                                     
+     C                   EXCEPT    £MCJOE                                        !!!                
+     C                   ELSE                                                    *!!                
+      *          § Exercice N-1                             !!!                                     
+     C                   EXCEPT    £MCJOA                                        !!!                
+     C                   ENDIF                                                  -+!!                
+      *          § Ctrl pour passages suivant.               !!                                     
+     C                   MOVE      *ON           àCTRL1            1              !!                
+      *                                                      !!                                     
+     C                   ENDIF                                                  --+!                
+      *                                                       !                                     
+     C                   ELSE                                                      *                
+     C                   Z-ADD     NP(£MM)       SONPIE                            !                
+     C                   ENDIF                                                  ---+                
+      *                                                                                             
+     C                   ENDSR                                                                      
+      *                                                                                             
+      * Ajout MVTJA2.                                                                               
+      *                                                                                             
+     OAFMVTJOR  EADD         £MJDA1                                                                 
+     O                                            2 'OD'                                            
+     O                       SOCSTE               4                                                 
+     O                                            6 'OR'                                            
+     O                       SOCJOU               9                                                 
+     O                       SODCPT              17                                                 
+     O                       *YEAR               21                                                 
+     O                       *MONTH              23                                                 
+     O                       *DAY                25                                                 
+     O                       SOCOCG              32                                                 
+     O                       SOSCCG              38                                                 
+     O                       SOCOMA              43                                                 
+     O                       SONPIE              50                                                 
+     O                       SONPIE              64                                                 
+     O                       £DEBI          B    70P                                                
+     O                       £CRDI          B    76P                                                
+     O                       SOLETT              80                                                 
+     O                       W1REGR              81                                                 
+     O                       SOLIBE             112                                                 
+     O                       SODPIE             120                                                 
+     O                       SODECH             128                                                 
+     O                                          129 '0'                                             
+     O                                          137 '00000000'                                      
+     O                       SOCREG             139                                                 
+     O                                          142 '   '                                           
+     O                       £NFOL              149                                                 
+     O                       WZON11             155P                                                
+     O                                          162 '0000000'                                       
+     O                       £DEP               163                                                 
+     O                       W1DCPT             175                                                 
+     O                       W1CPT1             178P                                                
+     O                       W1CPT2             181P                                                
+     O                                          197 '   '                                           
+     O                                          204 '0000000'                                       
+     O                                          228 '                        '                      
+     O                                          238 '0000000000'                                    
+     O                                          249 '           '                                   
+     O                                          251 '00'                                            
+     O                                          262 '           '                                   
+     O                                          273 '00000000000'                                   
+     O                                          286 '0000000000000'                                 
+      *                                                                                             
+      * MàJ de AFCJO1LE                                                                             
+      *                                                                                             
+     OAFCJO1LE  E            £MCJOE                                                                 
+     O                       NP                 197P                                                
+      *                                                                                             
+      * MàJ de AFCJO1LA                                                                             
+      *                                                                                             
+     OAFCJO1LA  E            £MCJOA                                                                 
+     O                       NP                 197P                                                
